@@ -1,0 +1,5 @@
+name: RmpPlugin
+main: com.rmp.RmpPlugin
+version: 0.1
+api-version: 1.21.3
+commands:
