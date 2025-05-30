@@ -17,6 +17,7 @@ import org.bukkit.loot.LootTable;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class EggLoot implements LootTable {
+    private final double EGG_DROP_CHANCE = .005; // default chance 0.5%
     private EntityType entityType;
 
     public EggLoot(EntityType entityType) {
@@ -27,8 +28,7 @@ public class EggLoot implements LootTable {
     public Collection<ItemStack> populateLoot(Random random, LootContext lootContext) {
         final List<ItemStack> items = new ArrayList<>();
 
-        // default chance 0.5%
-        if (random.nextDouble() <= .005) {
+        if (random.nextDouble() <= EGG_DROP_CHANCE) {
             // We get the next double from the Random instance passed to the method.
             // If you only want on roll on all of the items you make a variable out of the
             // random.nextDouble() to keep the double consistent throughout the method.

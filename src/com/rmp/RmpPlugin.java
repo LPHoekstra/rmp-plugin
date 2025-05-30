@@ -9,6 +9,7 @@ public class RmpPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         pluginManager.registerEvents(new EventListener(), this);
+        new PluginRecipe();
     }
 
     @Override
