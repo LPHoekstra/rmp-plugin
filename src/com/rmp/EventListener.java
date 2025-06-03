@@ -3,17 +3,23 @@ package com.rmp;
 import java.util.Collection;
 import java.util.Random;
 
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.loot.LootContext;
+
+import com.rmp.signWaypoint.ListWaypoint;
+import com.rmp.signWaypoint.RegisteredWaypoint;
 
 public class EventListener implements Listener {
     // drop player head on death
@@ -54,4 +60,52 @@ public class EventListener implements Listener {
 
         event.getDrops().addAll(extraItems);
     }
+
+    @EventHandler
+    public void onSignChangeEvent(SignChangeEvent event) {
+        String firstLine = event.getLine(0);
+
+        if (firstLine.equals("waypoint")) {
+            String secondLine = event.getLine(1);
+            Location location = event.getBlock().getLocation();
+
+            // improve name verification
+            if (secondLine != "") {
+                event.setLine(0, ChatColor.BLUE + firstLine);
+                ListWaypoint.addToList(new RegisteredWaypoint(secondLine, location, event.getPlayer()));
+
+                event.getPlayer().sendMessage("adding to list..." + secondLine);
+            }
+        }
+    }
+
+    // change item texture on rename
+    // @EventHandler
+    // public void onRenameItemAnvil(PrepareAnvilEvent event) {
+    // // get the first player in the anvil
+    // HumanEntity player = event.getViewers().get(0);
+
+    // // for loop on getViers list
+    // ItemStack newItem = event.getResult();
+
+    // if (newItem != null) {
+    // ItemMeta itemMeta = newItem.getItemMeta();
+
+    // // is itemMeta null, and check if it's an armor
+    // if (itemMeta != null && itemMeta instanceof ArmorMeta) {
+    // // if specific name, got specific model
+    // if (itemMeta.getDisplayName().equals("lotr")) {
+    // player.sendMessage("set armure lotr");
+    // itemMeta.setCustomModelData(1);
+
+    // newItem.setItemMeta(itemMeta);
+    // // reset default if not
+    // } else {
+    // itemMeta.setCustomModelData(0);
+
+    // newItem.setItemMeta(itemMeta);
+    // }
+    // }
+    // }
+    // }
 }

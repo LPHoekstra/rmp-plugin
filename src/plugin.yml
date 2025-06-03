@@ -1,5 +1,8 @@
 name: RmpPlugin
 main: com.rmp.RmpPlugin
-version: 0.3.0
+version: 0.4.0
 api-version: 1.21.3
 commands:
+  wp:
+    description: See all the waypoint and teleport to them
+    usage: /<command>
