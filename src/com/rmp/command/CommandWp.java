@@ -12,37 +12,38 @@ public class CommandWp implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (sender instanceof Player) {
+        if (sender instanceof Player player) {
+            String msgToSend = "";
             // TODO: can be optimized
-
             // if there is argument
             if (args.length >= 1 && !ListWaypoint.getList().isEmpty()) {
                 for (RegisteredWaypoint registeredWaypoint : ListWaypoint.getList()) {
-                    if (args[0].equals(registeredWaypoint.getName())) {
-                        // TODO: teleport the player to the waypoint
-                        sender.sendMessage("tp to the waypoint");
+                    String waypointName = registeredWaypoint.getName();
+
+                    if (args[0].equals(waypointName)) {
+                        player.teleport(registeredWaypoint.getLocation());
+                        msgToSend = "Tp au waypoint: " + waypointName;
                     }
                 }
             }
             // otherwise show the available waypoint
             else {
-                String msgToSend;
 
                 // show the available waypoint
                 if (!ListWaypoint.getList().isEmpty()) {
                     msgToSend = "Waypoint disponible: ";
 
                     for (RegisteredWaypoint registeredWaypoint : ListWaypoint.getList()) {
-                        msgToSend = msgToSend + registeredWaypoint.getName() + ".";
+                        msgToSend = msgToSend + registeredWaypoint.getName() + ". ";
                     }
                 }
                 // otherwise no waypoint available
                 else {
                     msgToSend = "Aucun waypoint disponible";
                 }
-
-                sender.sendMessage(msgToSend);
             }
+
+            sender.sendMessage(msgToSend);
 
             return true;
         }

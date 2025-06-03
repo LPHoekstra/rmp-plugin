@@ -3,23 +3,17 @@ package com.rmp;
 import java.util.Collection;
 import java.util.Random;
 
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.loot.LootContext;
-
-import com.rmp.signWaypoint.ListWaypoint;
-import com.rmp.signWaypoint.RegisteredWaypoint;
 
 public class EventListener implements Listener {
     // drop player head on death
@@ -59,24 +53,6 @@ public class EventListener implements Listener {
                 context);
 
         event.getDrops().addAll(extraItems);
-    }
-
-    @EventHandler
-    public void onSignChangeEvent(SignChangeEvent event) {
-        String firstLine = event.getLine(0);
-
-        if (firstLine.equals("waypoint")) {
-            String secondLine = event.getLine(1);
-            Location location = event.getBlock().getLocation();
-
-            // improve name verification
-            if (secondLine != "") {
-                event.setLine(0, ChatColor.BLUE + firstLine);
-                ListWaypoint.addToList(new RegisteredWaypoint(secondLine, location, event.getPlayer()));
-
-                event.getPlayer().sendMessage("adding to list..." + secondLine);
-            }
-        }
     }
 
     // change item texture on rename
