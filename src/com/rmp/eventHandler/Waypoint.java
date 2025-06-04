@@ -1,4 +1,4 @@
-package com.rmp.signWaypoint;
+package com.rmp.eventHandler;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -8,7 +8,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.SignChangeEvent;
 
-public class EventWaypoint implements Listener {
+import com.rmp.signWaypoint.ListWaypoint;
+import com.rmp.signWaypoint.RegisteredWaypoint;
+
+public class Waypoint implements Listener {
 
     // add a waypoint on sign validation
     @EventHandler

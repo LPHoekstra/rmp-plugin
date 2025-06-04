@@ -1,4 +1,4 @@
-package com.rmp;
+package com.rmp.lootTable;
 
 import java.util.ArrayList;
 import java.util.Collection;
