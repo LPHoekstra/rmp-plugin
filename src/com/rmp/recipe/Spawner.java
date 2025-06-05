@@ -5,8 +5,9 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
+import org.bukkit.plugin.java.JavaPlugin;
 
-public class Spawner extends Recipe {
+public class Spawner {
     public Spawner() {
         ItemStack spawnerStack = new ItemStack(Material.SPAWNER, 1);
 
@@ -19,5 +20,9 @@ public class Spawner extends Recipe {
         recipe.setIngredient('E', Material.NETHER_STAR);
 
         Bukkit.addRecipe(recipe);
+    }
+
+    private NamespacedKey getKey(String key) {
+        return new NamespacedKey(JavaPlugin.getProvidingPlugin(getClass()), key);
     }
 }
