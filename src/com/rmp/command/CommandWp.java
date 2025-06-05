@@ -5,7 +5,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import com.rmp.signWaypoint.ListWaypoint;
+import com.rmp.signWaypoint.PlayerWaypoints;
+import com.rmp.signWaypoint.WaypointManager;
 import com.rmp.signWaypoint.RegisteredWaypoint;
 
 public class CommandWp implements CommandExecutor {
@@ -13,11 +14,14 @@ public class CommandWp implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (sender instanceof Player player) {
-            String msgToSend = "";
             // TODO: can be optimized
+            String msgToSend = "";
+
+            PlayerWaypoints playerWaypoints = WaypointManager.getByPlayer(player);
+
             // if there is argument
-            if (args.length >= 1 && !ListWaypoint.getList().isEmpty()) {
-                for (RegisteredWaypoint registeredWaypoint : ListWaypoint.getList()) {
+            if (args.length >= 1 && !playerWaypoints.getList().isEmpty()) {
+                for (RegisteredWaypoint registeredWaypoint : playerWaypoints.getList()) {
                     String waypointName = registeredWaypoint.getName();
 
                     if (args[0].equals(waypointName)) {
@@ -30,10 +34,10 @@ public class CommandWp implements CommandExecutor {
             else {
 
                 // show the available waypoint
-                if (!ListWaypoint.getList().isEmpty()) {
+                if (!playerWaypoints.getList().isEmpty()) {
                     msgToSend = "Waypoint disponible: ";
 
-                    for (RegisteredWaypoint registeredWaypoint : ListWaypoint.getList()) {
+                    for (RegisteredWaypoint registeredWaypoint : playerWaypoints.getList()) {
                         msgToSend = msgToSend + registeredWaypoint.getName() + ". ";
                     }
                 }

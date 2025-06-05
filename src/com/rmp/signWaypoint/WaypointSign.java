@@ -8,6 +8,12 @@ import org.bukkit.block.sign.SignSide;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.SignChangeEvent;
 
+/**
+ * TODO Open a chest inventory with a compass, this chest contain items
+ * corresponding to the waypoint of the player. Those items have the name of the
+ * waypoint as title and have the coordinates in description. On selection of
+ * the item the player is teleported to the waypoint.
+ */
 public class WaypointSign {
     public static final String WAYPOINT_IDENTIFIER = "waypoint";
     public static final ChatColor WAYPOINT_COLOR = ChatColor.BLUE;
@@ -35,8 +41,10 @@ public class WaypointSign {
         boolean isFound = false;
         int i = 0;
 
-        while (!isFound || i < ListWaypoint.getList().size()) {
-            RegisteredWaypoint registeredWaypoints = ListWaypoint.getList().get(i);
+        PlayerWaypoints playerWaypoints = WaypointManager.getByPlayer(event.getPlayer());
+
+        while (!isFound || i < playerWaypoints.getList().size()) {
+            RegisteredWaypoint registeredWaypoints = playerWaypoints.getList().get(i);
 
             if (registeredWaypoints.getName().equals(oldName)) {
                 isFound = true;
@@ -44,7 +52,7 @@ public class WaypointSign {
                 // to keep the blue color
                 event.setLine(0, WAYPOINT_FIRSTLINE);
 
-                event.getPlayer().sendMessage("name changed from: " + oldName + " to: " + newName);
+                event.getPlayer().sendMessage("Nom changer de: " + oldName + " a: " + newName);
             }
 
             i++;
@@ -56,7 +64,8 @@ public class WaypointSign {
 
         if (!name.trim().isEmpty()) {
             event.setLine(0, WAYPOINT_FIRSTLINE);
-            ListWaypoint.addToList(new RegisteredWaypoint(name, location, event.getPlayer()));
+            PlayerWaypoints playerWaypoints = WaypointManager.getByPlayer(event.getPlayer());
+            playerWaypoints.addToList(new RegisteredWaypoint(name, location, event.getPlayer()));
 
             event.getPlayer().sendMessage("Waypoint " + name + " créé");
         }
@@ -66,16 +75,18 @@ public class WaypointSign {
         int i = 0;
         boolean isRemoved = false;
 
+        PlayerWaypoints playerWaypoints = WaypointManager.getByPlayer(event.getPlayer());
+
         /**
          * iterate on the list till the element isRemoved or the list is completely
          * iterate
          */
-        while (i <= ListWaypoint.getList().size() || !isRemoved) {
-            RegisteredWaypoint registeredWaypoint = ListWaypoint.getList().get(i);
+        while (i <= playerWaypoints.getList().size() || !isRemoved) {
+            RegisteredWaypoint registeredWaypoint = playerWaypoints.getList().get(i);
 
             if (event.getBlock().getLocation().equals(registeredWaypoint.getLocation())) {
                 isRemoved = true;
-                ListWaypoint.removeFromList(registeredWaypoint);
+                playerWaypoints.removeFromList(registeredWaypoint);
                 event.getPlayer().sendMessage("waypoint détruit");
             }
 

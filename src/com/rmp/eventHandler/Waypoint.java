@@ -5,12 +5,20 @@ import org.bukkit.block.sign.SignSide;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerSignOpenEvent;
 
+import com.rmp.signWaypoint.PlayerWaypoints;
+import com.rmp.signWaypoint.WaypointManager;
 import com.rmp.signWaypoint.PlayerModifyingSign;
 import com.rmp.signWaypoint.WaypointSign;
 
 public class Waypoint implements Listener {
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        WaypointManager.addToList(new PlayerWaypoints(event.getPlayer()));
+    }
 
     @EventHandler
     public void onSignOpenEvent(PlayerSignOpenEvent event) {
