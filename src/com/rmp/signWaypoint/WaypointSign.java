@@ -1,65 +1,85 @@
 package com.rmp.signWaypoint;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.block.Sign;
+import org.bukkit.block.sign.Side;
 import org.bukkit.block.sign.SignSide;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.SignChangeEvent;
-import org.bukkit.plugin.java.JavaPlugin;
 
-import com.rmp.RmpPlugin;
+public class WaypointSign {
+    public static final String WAYPOINT_IDENTIFIER = "waypoint";
+    public static final ChatColor WAYPOINT_COLOR = ChatColor.BLUE;
+    public static final String WAYPOINT_FIRSTLINE = WAYPOINT_COLOR + WAYPOINT_IDENTIFIER;
 
-// TODO refactoring
-public class WaypointSign implements Listener {
-    private SignSide currentSignSide;
-
-    public WaypointSign(SignSide signSide) {
-        this.currentSignSide = signSide;
-        Bukkit.getPluginManager().registerEvents(this, JavaPlugin.getPlugin(RmpPlugin.class));
+    public WaypointSign() {
     }
 
-    @EventHandler
-    public void onSignChangeEvent(SignChangeEvent event) {
-        String firstLine = event.getLine(0);
+    public static boolean isWaypointRename(SignSide currentSignSide) {
+        return currentSignSide.getLine(0).equals(WAYPOINT_FIRSTLINE);
+    }
 
-        // handle the rename
-        if (currentSignSide.getLine(0).equals(ChatColor.BLUE + "waypoint")) {
-            boolean isFound = false;
-            int i = 0;
+    public static boolean isNewWaypoint(SignChangeEvent event) {
+        return event.getLine(0).equals(WAYPOINT_IDENTIFIER);
+    }
 
-            while (!isFound || i < ListWaypoint.getList().size()) {
-                RegisteredWaypoint registeredWaypoints = ListWaypoint.getList().get(i);
+    public static boolean isWaypointSign(Sign sign) {
+        return sign.getSide(Side.BACK).getLine(0).equals(WaypointSign.WAYPOINT_FIRSTLINE)
+                || sign.getSide(Side.FRONT).getLine(0).equals(WaypointSign.WAYPOINT_FIRSTLINE);
+    }
 
-                if (registeredWaypoints.getName().equals(currentSignSide.getLine(1))) {
-                    isFound = true;
-                    registeredWaypoints.setName(event.getLine(1));
-                    // to keep the blue color
-                    event.setLine(0, ChatColor.BLUE + "waypoint");
+    public static void renameWaypoint(SignChangeEvent event, String newName, SignSide currentSignSide) {
+        String oldName = currentSignSide.getLine(1);
 
-                    event.getPlayer().sendMessage(
-                            "name changed from: " + currentSignSide.getLine(1) + " to: " + event.getLine(1));
-                }
+        boolean isFound = false;
+        int i = 0;
 
-                i++;
+        while (!isFound || i < ListWaypoint.getList().size()) {
+            RegisteredWaypoint registeredWaypoints = ListWaypoint.getList().get(i);
+
+            if (registeredWaypoints.getName().equals(oldName)) {
+                isFound = true;
+                registeredWaypoints.setName(newName);
+                // to keep the blue color
+                event.setLine(0, WAYPOINT_FIRSTLINE);
+
+                event.getPlayer().sendMessage("name changed from: " + oldName + " to: " + newName);
             }
+
+            i++;
         }
+    }
 
-        // create a new waypoint
-        else if (firstLine.equals("waypoint")) {
-            String secondLine = event.getLine(1);
-            Location location = event.getBlock().getLocation();
+    public static void createWaypoint(SignChangeEvent event, String name) {
+        Location location = event.getBlock().getLocation();
 
-            // TODO improve name verification
-            if (secondLine != "") {
-                event.setLine(0, ChatColor.BLUE + firstLine);
-                ListWaypoint.addToList(new RegisteredWaypoint(secondLine, location, event.getPlayer()));
+        if (!name.trim().isEmpty()) {
+            event.setLine(0, WAYPOINT_FIRSTLINE);
+            ListWaypoint.addToList(new RegisteredWaypoint(name, location, event.getPlayer()));
 
-                event.getPlayer().sendMessage("Waypoint " + secondLine + " créé");
+            event.getPlayer().sendMessage("Waypoint " + name + " créé");
+        }
+    }
+
+    public static void removeWaypoint(BlockBreakEvent event) {
+        int i = 0;
+        boolean isRemoved = false;
+
+        /**
+         * iterate on the list till the element isRemoved or the list is completely
+         * iterate
+         */
+        while (i <= ListWaypoint.getList().size() || !isRemoved) {
+            RegisteredWaypoint registeredWaypoint = ListWaypoint.getList().get(i);
+
+            if (event.getBlock().getLocation().equals(registeredWaypoint.getLocation())) {
+                isRemoved = true;
+                ListWaypoint.removeFromList(registeredWaypoint);
+                event.getPlayer().sendMessage("waypoint détruit");
             }
-        }
 
-        SignChangeEvent.getHandlerList().unregister(this);
+            i++;
+        }
     }
 }

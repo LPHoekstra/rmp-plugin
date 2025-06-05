@@ -3,7 +3,6 @@ package com.rmp.signWaypoint;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-// record ?
 public class RegisteredWaypoint {
     private Location location;
     private String name;
