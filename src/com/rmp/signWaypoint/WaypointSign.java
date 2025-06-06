@@ -31,6 +31,7 @@ public class WaypointSign {
                 || sign.getSide(Side.FRONT).getLine(0).equals(WaypointSign.WAYPOINT_FIRSTLINE);
     }
 
+    // TODO handle when another player 
     public static void renameWaypoint(SignChangeEvent event, String newName, SignSide currentSignSide) {
         String oldName = currentSignSide.getLine(1);
 
@@ -68,6 +69,7 @@ public class WaypointSign {
         }
     }
 
+    // TODO handle when the sign destroyed from another source
     public static void removeWaypoint(BlockBreakEvent event) {
         int i = 0;
         boolean isRemoved = false;

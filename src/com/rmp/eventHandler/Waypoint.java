@@ -37,6 +37,7 @@ public class Waypoint implements Listener {
         new PlayerModifyingSign(targetSide);
     }
 
+    // TODO left click with a sword must not execute the code
     @EventHandler
     public void onSignBreakEvent(BlockBreakEvent event) {
         if (event.getBlock().getState() instanceof Sign sign) {
