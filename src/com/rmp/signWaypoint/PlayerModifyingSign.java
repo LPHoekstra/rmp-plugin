@@ -31,6 +31,7 @@ public class PlayerModifyingSign implements Listener {
             WaypointSign.createWaypoint(event, newName);
         }
 
+        // to have a new value of currentSignSide
         SignChangeEvent.getHandlerList().unregister(this);
     }
 }

@@ -17,7 +17,7 @@ public class Waypoint implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        WaypointManager.addToList(new PlayerWaypoints(event.getPlayer()));
+        WaypointManager.addToList(new PlayerWaypoints(event.getPlayer().getUniqueId()));
     }
 
     @EventHandler

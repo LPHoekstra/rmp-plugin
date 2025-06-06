@@ -1,5 +1,7 @@
 package com.rmp.signWaypoint;
 
+import java.util.List;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.block.Sign;
@@ -41,10 +43,11 @@ public class WaypointSign {
         boolean isFound = false;
         int i = 0;
 
-        PlayerWaypoints playerWaypoints = WaypointManager.getByPlayer(event.getPlayer());
+        PlayerWaypoints playerWaypoints = WaypointManager.getByPlayerId(event.getPlayer().getUniqueId());
+        List<RegisteredWaypoint> playerWaypointsList = playerWaypoints.getList();
 
-        while (!isFound || i < playerWaypoints.getList().size()) {
-            RegisteredWaypoint registeredWaypoints = playerWaypoints.getList().get(i);
+        while (!isFound || i < playerWaypointsList.size()) {
+            RegisteredWaypoint registeredWaypoints = playerWaypointsList.get(i);
 
             if (registeredWaypoints.getName().equals(oldName)) {
                 isFound = true;
@@ -64,7 +67,7 @@ public class WaypointSign {
 
         if (!name.trim().isEmpty()) {
             event.setLine(0, WAYPOINT_FIRSTLINE);
-            PlayerWaypoints playerWaypoints = WaypointManager.getByPlayer(event.getPlayer());
+            PlayerWaypoints playerWaypoints = WaypointManager.getByPlayerId(event.getPlayer().getUniqueId());
             playerWaypoints.addToList(new RegisteredWaypoint(name, location, event.getPlayer()));
 
             event.getPlayer().sendMessage("Waypoint " + name + " créé");
@@ -75,7 +78,7 @@ public class WaypointSign {
         int i = 0;
         boolean isRemoved = false;
 
-        PlayerWaypoints playerWaypoints = WaypointManager.getByPlayer(event.getPlayer());
+        PlayerWaypoints playerWaypoints = WaypointManager.getByPlayerId(event.getPlayer().getUniqueId());
 
         /**
          * iterate on the list till the element isRemoved or the list is completely

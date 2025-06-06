@@ -2,8 +2,7 @@ package com.rmp.signWaypoint;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.bukkit.entity.Player;
+import java.util.UUID;
 
 public class WaypointManager {
     private static List<PlayerWaypoints> playerWaypointsList = new ArrayList<PlayerWaypoints>();
@@ -26,10 +25,15 @@ public class WaypointManager {
         playerWaypointsList.add(waypoint);
     }
 
-    public static PlayerWaypoints getByPlayer(Player player) {
+    /**
+     * Get a specific PlayerWaypoints with the uuid of the player
+     * @param playerId
+     * @return
+     */
+    public static PlayerWaypoints getByPlayerId(UUID playerId) {
         return playerWaypointsList.stream()
-            .filter(playerWaypoints -> playerWaypoints.getPlayer().equals(player))
+            .filter(playerWaypoints -> playerWaypoints.getPlayer().equals(playerId))
             .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("No waypoint list found for player: " + player.getName()));
+            .orElseThrow(() -> new IllegalArgumentException("No waypoint list found for player: " + playerId.toString()));
     }
 }

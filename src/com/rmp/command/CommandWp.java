@@ -17,7 +17,7 @@ public class CommandWp implements CommandExecutor {
             // TODO: can be optimized
             String msgToSend = "";
 
-            PlayerWaypoints playerWaypoints = WaypointManager.getByPlayer(player);
+            PlayerWaypoints playerWaypoints = WaypointManager.getByPlayerId(player.getUniqueId());
 
             // if there is argument
             if (args.length >= 1 && !playerWaypoints.getList().isEmpty()) {

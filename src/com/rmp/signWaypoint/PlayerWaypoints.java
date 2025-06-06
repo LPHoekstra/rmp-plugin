@@ -2,23 +2,21 @@ package com.rmp.signWaypoint;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.bukkit.entity.Player;
+import java.util.UUID;
 
 // TODO add data persistence
 public class PlayerWaypoints {
-    // TODO each player must have is own list of registeredWaypoint
+    // TODO each player must have is own list of registeredWaypoint. need to test
     // TODO can't have 2 RegisteredWaypoint with the same name
     private List<RegisteredWaypoint> list = new ArrayList<RegisteredWaypoint>();
-    // TODO need to change to UUID ?
-    private Player player;
+    private UUID playerId;
 
-    public PlayerWaypoints(Player player) {
-        this.player = player;
+    public PlayerWaypoints(UUID player) {
+        this.playerId = player;
     }
 
-    public Player getPlayer() {
-        return this.player;
+    public UUID getPlayer() {
+        return this.playerId;
     }
 
     public List<RegisteredWaypoint> getList() {
