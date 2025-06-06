@@ -10,12 +10,6 @@ import org.bukkit.block.sign.SignSide;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.SignChangeEvent;
 
-/**
- * TODO Open a chest inventory with a compass, this chest contain items
- * corresponding to the waypoint of the player. Those items have the name of the
- * waypoint as title and have the coordinates in description. On selection of
- * the item the player is teleported to the waypoint.
- */
 public class WaypointSign {
     public static final String WAYPOINT_IDENTIFIER = "waypoint";
     public static final ChatColor WAYPOINT_COLOR = ChatColor.BLUE;
