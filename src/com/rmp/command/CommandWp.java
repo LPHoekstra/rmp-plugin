@@ -10,49 +10,57 @@ import com.rmp.signWaypoint.WaypointManager;
 import com.rmp.signWaypoint.RegisteredWaypoint;
 
 public class CommandWp implements CommandExecutor {
+    private String msgToSend = "";
+    private PlayerWaypoints playerWaypoints = null;
+    private String[] argument = null;
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (sender instanceof Player player) {
-            // TODO: can be optimized
-            String msgToSend = "";
+            playerWaypoints = WaypointManager.getByPlayerId(player.getUniqueId());
+            argument = args;
 
-            PlayerWaypoints playerWaypoints = WaypointManager.getByPlayerId(player.getUniqueId());
-
-            // if there is argument
-            if (args.length >= 1 && !playerWaypoints.getList().isEmpty()) {
-                for (RegisteredWaypoint registeredWaypoint : playerWaypoints.getList()) {
-                    String waypointName = registeredWaypoint.getName();
-
-                    if (args[0].equals(waypointName)) {
-                        player.teleport(registeredWaypoint.getLocation());
-                        msgToSend = "Tp au waypoint: " + waypointName;
-                    }
-                }
+            if (isArgumentInCommand()) {
+                teleportToWaypoint(player);
             }
             // otherwise show the available waypoint
             else {
-
-                // show the available waypoint
-                if (!playerWaypoints.getList().isEmpty()) {
-                    msgToSend = "Waypoint disponible: ";
-
-                    for (RegisteredWaypoint registeredWaypoint : playerWaypoints.getList()) {
-                        msgToSend = msgToSend + registeredWaypoint.getName() + ". ";
-                    }
-                }
-                // otherwise no waypoint available
-                else {
+                if (playerWaypoints.getList().isEmpty()) {
                     msgToSend = "Aucun waypoint disponible";
+                } 
+                else {
+                    getAvailableWaypoint();
                 }
             }
 
             sender.sendMessage(msgToSend);
-
             return true;
         }
 
         sender.sendMessage("Invalid command sender, must be a player");
         return false;
+    }
+
+    private boolean isArgumentInCommand() {
+        return argument.length >= 1 && !playerWaypoints.getList().isEmpty();
+    }
+
+    private void teleportToWaypoint(Player player) {
+        RegisteredWaypoint waypointToTeleport = playerWaypoints.getList().stream()
+            .filter(waypoint -> waypoint.getName().equals(argument[0]))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Can't teleport because " + argument[0] + " is not valid"))
+        ;
+        
+        player.teleport(waypointToTeleport.getLocation());
+        msgToSend = "Tp au waypoint: " + waypointToTeleport.getName();
+    }
+
+    private void getAvailableWaypoint() {
+        msgToSend = "Waypoint disponible: ";
+
+        for (RegisteredWaypoint registeredWaypoint : playerWaypoints.getList()) {
+            msgToSend = msgToSend + registeredWaypoint.getName() + ". ";
+        }
     }
 }
