@@ -32,15 +32,15 @@ public class WaypointInventory implements Listener {
     // TODO player can't place an item in this inventory
     @EventHandler
     private void onClickWaypointItem(InventoryClickEvent event) {
-        if (inventory.equals(event.getInventory())) {
-            ItemStack waypointItemStack = event.getCurrentItem();
+        if (getInventory().equals(event.getClickedInventory())) {
+            ItemStack selectedItemStack = event.getCurrentItem();
             HumanEntity player = event.getWhoClicked();
 
-            if (waypointItemStack != null) {
+            if (selectedItemStack != null) {
                 // Iteration on WaypointManager to find player, then on registeredWaypointsList to get the Location.
                 List<RegisteredWaypoint> registeredWaypoints = WaypointManager.getByPlayerId(player.getUniqueId()).getList();
                 RegisteredWaypoint selectedRegisteredWaypoint = registeredWaypoints.stream()
-                    .filter(waypoint -> waypoint.getName().equals(waypointItemStack.getItemMeta().getDisplayName()))
+                    .filter(waypoint -> waypoint.getName().equals(selectedItemStack.getItemMeta().getDisplayName()))
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException("Can't find location of the selected item"))
                 ;    
@@ -51,7 +51,7 @@ public class WaypointInventory implements Listener {
     }
     
     private void setItemsInventory(ItemStack[] waypointsItemStacksList) {
-        inventory.setStorageContents(waypointsItemStacksList);
+        getInventory().setStorageContents(waypointsItemStacksList);
     }
     
     private ItemStack[] createWaypointsItems(Player player) {
@@ -78,6 +78,10 @@ public class WaypointInventory implements Listener {
     }
     
     private void openInventory(Player player) {
-        player.openInventory(inventory);
+        player.openInventory(getInventory());
+    }
+
+    private Inventory getInventory() {
+        return this.inventory;
     }
 }

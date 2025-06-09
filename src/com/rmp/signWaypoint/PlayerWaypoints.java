@@ -6,7 +6,6 @@ import java.util.UUID;
 
 // TODO add data persistence
 public class PlayerWaypoints {
-    // TODO each player must have is own list of registeredWaypoint. need to test
     // TODO can't have 2 RegisteredWaypoint with the same name
     private List<RegisteredWaypoint> list = new ArrayList<RegisteredWaypoint>();
     private UUID playerId;
