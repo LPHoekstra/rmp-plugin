@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -19,45 +18,56 @@ import com.rmp.RmpPlugin;
 
 public class WaypointInventory implements Listener {
     private Inventory inventory;
+    private Player player;
     
     public WaypointInventory(Player player) {
         this.inventory = Bukkit.createInventory(player, 27, "Waypoints");
+        this.player = player;
         Bukkit.getPluginManager().registerEvents(this, JavaPlugin.getPlugin(RmpPlugin.class));
         
-        setItemsInventory(createWaypointsItems(player));
+        setItemsInventory(createWaypointsItems());
 
-        openInventory(player);
+        openInventory();
     }
 
-    // TODO player can't place an item in this inventory
     @EventHandler
     private void onClickWaypointItem(InventoryClickEvent event) {
-        if (getInventory().equals(event.getClickedInventory())) {
-            ItemStack selectedItemStack = event.getCurrentItem();
-            HumanEntity player = event.getWhoClicked();
+        // when a player click on item from WaypointInventory
+        if (isWaypointInventory(event.getClickedInventory())) {
+            teleportPlayerToWaypoint(event.getCurrentItem());
+            return;
+        }
 
-            if (selectedItemStack != null) {
-                // Iteration on WaypointManager to find player, then on registeredWaypointsList to get the Location.
-                List<RegisteredWaypoint> registeredWaypoints = WaypointManager.getByPlayerId(player.getUniqueId()).getList();
-                RegisteredWaypoint selectedRegisteredWaypoint = registeredWaypoints.stream()
-                    .filter(waypoint -> waypoint.getName().equals(selectedItemStack.getItemMeta().getDisplayName()))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Can't find location of the selected item"))
-                ;    
+        // when a player move an item to waypoint inventory
+        if (isMovingItemsInInventory(event)) {
+            event.setCancelled(true);
+        }
+    }
 
-                player.teleport(selectedRegisteredWaypoint.getLocation());
-            }
+    // TODO improve it by allowing player to move item in is own inventory
+    private boolean isMovingItemsInInventory(InventoryClickEvent event) {
+        return event.getInventory().equals(getInventory()) &&
+            event.getClickedInventory().equals(getPlayer().getInventory());
+    }
+    
+    private void teleportPlayerToWaypoint(ItemStack currentItem) {       
+        if (currentItem != null) {
+            // Iteration on WaypointManager to find player, then on registeredWaypointsList to get the Location.
+            List<RegisteredWaypoint> registeredWaypoints = WaypointManager.getByPlayerId(getPlayer().getUniqueId()).getList();
+            RegisteredWaypoint selectedRegisteredWaypoint = registeredWaypoints.stream()
+            .filter(waypoint -> waypoint.getName().equals(currentItem.getItemMeta().getDisplayName()))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Can't find location of the selected item"))
+            ;    
+            
+            getPlayer().teleport(selectedRegisteredWaypoint.getLocation());
         }
     }
     
-    private void setItemsInventory(ItemStack[] waypointsItemStacksList) {
-        getInventory().setStorageContents(waypointsItemStacksList);
-    }
-    
-    private ItemStack[] createWaypointsItems(Player player) {
-        List<RegisteredWaypoint> registeredWaypointsList = WaypointManager.getByPlayerId(player.getUniqueId()).getList();
+    private ItemStack[] createWaypointsItems() {
+        List<RegisteredWaypoint> registeredWaypointsList = WaypointManager.getByPlayerId(getPlayer().getUniqueId()).getList();
         List<ItemStack> waypointsItemStacksList = new ArrayList<ItemStack>();
-
+        
         for (RegisteredWaypoint registeredWaypoints : registeredWaypointsList) {
             List<String> coordinatesList = new ArrayList<String>();
             coordinatesList.add("X: " + registeredWaypoints.getLocation().getX());
@@ -70,18 +80,30 @@ public class WaypointInventory implements Listener {
             bookMeta.setLore(coordinatesList);
             
             bookStack.setItemMeta(bookMeta);
-
+            
             waypointsItemStacksList.add(bookStack);
         }
-
+        
         return waypointsItemStacksList.toArray(new ItemStack[waypointsItemStacksList.size()]);
     }
-    
-    private void openInventory(Player player) {
-        player.openInventory(getInventory());
+
+    private boolean isWaypointInventory(Inventory clickInventory) {
+        return getInventory().equals(clickInventory);
     }
 
+    private void setItemsInventory(ItemStack[] waypointsItemStacksList) {
+        getInventory().setStorageContents(waypointsItemStacksList);
+    }
+    
+    private void openInventory() {
+        getPlayer().openInventory(getInventory());
+    }
+    
     private Inventory getInventory() {
         return this.inventory;
+    }
+    
+    private Player getPlayer() {
+        return this.player;
     }
 }
