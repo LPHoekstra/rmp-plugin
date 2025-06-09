@@ -1,12 +1,15 @@
 package com.rmp.signWaypoint;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.block.Sign;
 import org.bukkit.block.sign.Side;
 import org.bukkit.block.sign.SignSide;
+import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.SignChangeEvent;
 
@@ -19,11 +22,11 @@ public class WaypointSign {
     }
 
     public static boolean isWaypointRename(SignSide currentSignSide) {
-        return currentSignSide.getLine(0).equals(WAYPOINT_FIRSTLINE);
+        return currentSignSide.getLine(0).trim().equals(WAYPOINT_FIRSTLINE);
     }
 
     public static boolean isNewWaypoint(SignChangeEvent event) {
-        return event.getLine(0).equals(WAYPOINT_IDENTIFIER);
+        return event.getLine(0).trim().equals(WAYPOINT_IDENTIFIER);
     }
 
     public static boolean isWaypointSign(Sign sign) {
@@ -31,32 +34,46 @@ public class WaypointSign {
                 || sign.getSide(Side.FRONT).getLine(0).equals(WaypointSign.WAYPOINT_FIRSTLINE);
     }
 
-    // TODO handle when another player 
-    public static void renameWaypoint(SignChangeEvent event, String newName, SignSide currentSignSide) {
-        String oldName = currentSignSide.getLine(1);
+    /**
+     * Verify if the player have a waypoint named like the sign name  
+     * @param player
+     * @param targetSide
+     */
+    public static boolean isSignBelongsToPlayer(UUID playerUUID, SignSide targetSide) {
+        List<RegisteredWaypoint> registeredWaypointsList = WaypointManager.getByPlayerId(playerUUID).getList();
+        Optional<RegisteredWaypoint> registeredWaypointOptional = registeredWaypointsList.stream()
+            .filter(waypoint -> waypoint.getName().equals(targetSide.getLine(1)))
+            .findFirst();
 
-        boolean isFound = false;
-        int i = 0;
-
-        PlayerWaypoints playerWaypoints = WaypointManager.getByPlayerId(event.getPlayer().getUniqueId());
-        List<RegisteredWaypoint> playerWaypointsList = playerWaypoints.getList();
-
-        while (!isFound || i < playerWaypointsList.size()) {
-            RegisteredWaypoint registeredWaypoints = playerWaypointsList.get(i);
-
-            if (registeredWaypoints.getName().equals(oldName)) {
-                isFound = true;
-                registeredWaypoints.setName(newName);
-                // to keep the blue color
-                event.setLine(0, WAYPOINT_FIRSTLINE);
-
-                event.getPlayer().sendMessage("Nom changer de: " + oldName + " a: " + newName);
-            }
-
-            i++;
+        if (registeredWaypointOptional.isEmpty()) {
+            return false;
         }
+
+        return true;
     }
 
+    // TODO handle when another player, adding the name of the player on the sign ?
+    public static void renameWaypoint(SignChangeEvent event, String newName, SignSide currentSignSide) {
+        String oldName = currentSignSide.getLine(1);
+        Player player = event.getPlayer();
+
+        List<RegisteredWaypoint> playerWaypointsList = WaypointManager.getByPlayerId(player.getUniqueId()).getList();
+
+        RegisteredWaypoint registeredWaypointToRename = playerWaypointsList.stream()
+            .filter(playerWaypoint -> playerWaypoint.getName().equals(oldName))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(""))
+        ;
+
+        registeredWaypointToRename.setName(newName);
+        // to keep the blue color
+        event.setLine(0, WAYPOINT_FIRSTLINE);
+        event.setLine(2, player.getName());
+
+        player.sendMessage("Nom changer de: " + oldName + " a: " + newName);
+    }
+
+    // TODO a sign must belong to a player and only this player remove or rename the sign
     public static void createWaypoint(SignChangeEvent event, String name) {
         Location location = event.getBlock().getLocation();
 
@@ -65,31 +82,24 @@ public class WaypointSign {
             PlayerWaypoints playerWaypoints = WaypointManager.getByPlayerId(event.getPlayer().getUniqueId());
             playerWaypoints.addToList(new RegisteredWaypoint(name, location, event.getPlayer()));
 
+            // set player name 
+            event.setLine(2, event.getPlayer().getName());
+
             event.getPlayer().sendMessage("Waypoint " + name + " créé");
         }
     }
 
     // TODO handle when the sign destroyed from another source
     public static void removeWaypoint(BlockBreakEvent event) {
-        int i = 0;
-        boolean isRemoved = false;
-
         PlayerWaypoints playerWaypoints = WaypointManager.getByPlayerId(event.getPlayer().getUniqueId());
 
-        /**
-         * iterate on the list till the element isRemoved or the list is completely
-         * iterate
-         */
-        while (i <= playerWaypoints.getList().size() || !isRemoved) {
-            RegisteredWaypoint registeredWaypoint = playerWaypoints.getList().get(i);
+        RegisteredWaypoint registeredWaypointToRemove = playerWaypoints.getList().stream()
+            .filter(waypoint -> waypoint.getLocation().equals(event.getBlock().getLocation()))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Waypoint not in the list"))
+        ;
 
-            if (event.getBlock().getLocation().equals(registeredWaypoint.getLocation())) {
-                isRemoved = true;
-                playerWaypoints.removeFromList(registeredWaypoint);
-                event.getPlayer().sendMessage("waypoint détruit");
-            }
-
-            i++;
-        }
+        playerWaypoints.removeFromList(registeredWaypointToRemove);
+        event.getPlayer().sendMessage("Waypoint " + registeredWaypointToRemove.getName() + " supprimer");
     }
 }
