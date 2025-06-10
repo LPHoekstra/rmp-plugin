@@ -1,18 +1,19 @@
 package com.rmp.eventHandler;
 
+import java.util.List;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.block.sign.Side;
 import org.bukkit.block.sign.SignSide;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerSignOpenEvent;
 
-import com.rmp.signWaypoint.PlayerWaypoints;
 import com.rmp.signWaypoint.WaypointInventory;
 import com.rmp.signWaypoint.WaypointManager;
 import com.rmp.signWaypoint.PlayerModifyingSign;
@@ -29,7 +30,7 @@ public class Waypoint implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        WaypointManager.addToList(new PlayerWaypoints(event.getPlayer().getUniqueId()));
+        WaypointManager.addToList(event.getPlayer().getUniqueId());
     }
 
     // TODO need to test if another player can modify a waypoint
@@ -50,6 +51,7 @@ public class Waypoint implements Listener {
 
     // TODO need to test if another player can destroy it
     // TODO permission for an op can anyway destroy it
+    // TODO what if a player break the block under the sign ?
     @EventHandler
     public void onBlockBreakByPlayerEvent(BlockBreakEvent event) {
         if (event.getBlock().getState() instanceof Sign sign) {
@@ -63,12 +65,24 @@ public class Waypoint implements Listener {
         }
     }
 
-    // TODO handle when a sign explode
+    // protect a sign from an explosion
     @EventHandler
-    public void onSignExplodeEvent(BlockExplodeEvent event) {
-        if (event.getBlock().getState() instanceof Sign sign) {
-            if (WaypointSign.isWaypointSign(sign)) {
-                WaypointSign.removeWaypoint(null);
+    public void onSignExplodeEvent(EntityExplodeEvent event) {
+        List<Block> blockExplosionList = event.blockList();
+
+        for (Block block : blockExplosionList) {
+            // if a waypoint sign is in the list
+            if (block.getState() instanceof Sign sign) {
+                if (WaypointSign.isWaypointSign(sign)) {
+                    blockExplosionList.remove(block);
+                    
+                    Block underSignBlock = event.getEntity().getWorld().getBlockAt(block.getX(), block.getY() - 1, block.getZ());
+                    
+                    // if the block under the sign is in the list, he's removed
+                    if (blockExplosionList.contains(underSignBlock)) {
+                        blockExplosionList.remove(underSignBlock);
+                    }
+                }
             }
         }
     }

@@ -5,9 +5,9 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import com.rmp.signWaypoint.PlayerWaypoints;
 import com.rmp.signWaypoint.WaypointManager;
-import com.rmp.signWaypoint.RegisteredWaypoint;
+import com.rmp.model.PlayerWaypoints;
+import com.rmp.model.RegisteredWaypoint;
 
 public class CommandWp implements CommandExecutor {
     private String msgToSend = "";

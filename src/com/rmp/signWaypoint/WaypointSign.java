@@ -13,6 +13,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.SignChangeEvent;
 
+import com.rmp.model.PlayerWaypoints;
+import com.rmp.model.RegisteredWaypoint;
+
 public class WaypointSign {
     public static final String WAYPOINT_IDENTIFIER = "waypoint";
     public static final ChatColor WAYPOINT_COLOR = ChatColor.BLUE;
@@ -52,7 +55,6 @@ public class WaypointSign {
         return true;
     }
 
-    // TODO handle when another player, adding the name of the player on the sign ?
     public static void renameWaypoint(SignChangeEvent event, String newName, SignSide currentSignSide) {
         String oldName = currentSignSide.getLine(1);
         Player player = event.getPlayer();
@@ -66,14 +68,13 @@ public class WaypointSign {
         ;
 
         registeredWaypointToRename.setName(newName);
-        // to keep the blue color
+        // to keep the blue color and player name on sign
         event.setLine(0, WAYPOINT_FIRSTLINE);
         event.setLine(2, player.getName());
 
         player.sendMessage("Nom changer de: " + oldName + " a: " + newName);
     }
 
-    // TODO a sign must belong to a player and only this player remove or rename the sign
     public static void createWaypoint(SignChangeEvent event, String name) {
         Location location = event.getBlock().getLocation();
 

@@ -15,6 +15,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.rmp.RmpPlugin;
+import com.rmp.model.RegisteredWaypoint;
 
 public class WaypointInventory implements Listener {
     private Inventory inventory;

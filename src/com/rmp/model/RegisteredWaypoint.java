@@ -1,4 +1,4 @@
-package com.rmp.signWaypoint;
+package com.rmp.model;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;

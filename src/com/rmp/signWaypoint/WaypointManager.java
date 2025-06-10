@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.rmp.model.PlayerWaypoints;
+
 public class WaypointManager {
     private static List<PlayerWaypoints> playerWaypointsList = new ArrayList<PlayerWaypoints>();
 
@@ -12,17 +14,19 @@ public class WaypointManager {
     }
 
     /**
-     * If no playerWaypoints with the player is in list, the waypoints are added.
+     * Used to create a PlayerWaypoints instance
+     * 
+     * If there is no playerWaypoints with the player in the list, he's added to the list.
      * @param waypoint
      */
-    public static void addToList(PlayerWaypoints waypoint) {
+    public static void addToList(UUID playerUuid) {
         for (PlayerWaypoints playerWaypoints : playerWaypointsList) {
-            if (playerWaypoints.getPlayer() == waypoint.getPlayer()) {
+            if (playerWaypoints.getPlayer() == playerUuid) {
                 return;
             }
         }
 
-        playerWaypointsList.add(waypoint);
+        playerWaypointsList.add(new PlayerWaypoints(playerUuid));
     }
 
     /**
