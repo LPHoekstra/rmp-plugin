@@ -1,4 +1,4 @@
-package com.rmp.signWaypoint;
+package com.rmp.waypoint;
 
 import java.util.ArrayList;
 import java.util.List;

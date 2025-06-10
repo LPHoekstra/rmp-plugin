@@ -6,6 +6,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.block.sign.Side;
 import org.bukkit.block.sign.SignSide;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -14,10 +15,11 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerSignOpenEvent;
 
-import com.rmp.signWaypoint.WaypointInventory;
-import com.rmp.signWaypoint.WaypointManager;
-import com.rmp.signWaypoint.PlayerModifyingSign;
-import com.rmp.signWaypoint.WaypointSign;
+import com.rmp.sign.WaypointCreateSign;
+import com.rmp.sign.WaypointRenameSign;
+import com.rmp.waypoint.WaypointInventory;
+import com.rmp.waypoint.WaypointManager;
+import com.rmp.waypoint.WaypointSign;
 
 public class Waypoint implements Listener {
 
@@ -37,15 +39,16 @@ public class Waypoint implements Listener {
     @EventHandler
     public void onSignOpenEvent(PlayerSignOpenEvent event) {
         SignSide targetSide = event.getSign().getTargetSide(event.getPlayer());
+        Sign sign = event.getSign();
 
-        if (WaypointSign.isWaypointSign(event.getSign())) {
+        if (WaypointSign.isWaypointSign(sign)) {
             if (WaypointSign.isSignBelongsToPlayer(event.getPlayer().getUniqueId(), targetSide)) {
-                new PlayerModifyingSign(targetSide);        
+                new WaypointRenameSign(sign);        
             } else {
                 event.setCancelled(true);
             }
         } else {
-            new PlayerModifyingSign(targetSide);
+            new WaypointCreateSign(sign);
         }
     }
 
@@ -56,8 +59,10 @@ public class Waypoint implements Listener {
     public void onBlockBreakByPlayerEvent(BlockBreakEvent event) {
         if (event.getBlock().getState() instanceof Sign sign) {
             if (WaypointSign.isWaypointSign(sign)) {
-                if (WaypointSign.isSignBelongsToPlayer(event.getPlayer().getUniqueId(), sign.getSide(Side.FRONT))) {
-                    WaypointSign.removeWaypoint(event);    
+                Player player = event.getPlayer();
+
+                if (WaypointSign.isSignBelongsToPlayer(player.getUniqueId(), sign.getSide(Side.FRONT))) {
+                    WaypointSign.removeWaypoint(sign, player);    
                 } else {
                     event.setCancelled(true);
                 }
@@ -65,7 +70,9 @@ public class Waypoint implements Listener {
         }
     }
 
-    // protect a sign from an explosion
+    /**
+     * protect a sign from an explosion
+     */
     @EventHandler
     public void onSignExplodeEvent(EntityExplodeEvent event) {
         List<Block> blockExplosionList = event.blockList();
