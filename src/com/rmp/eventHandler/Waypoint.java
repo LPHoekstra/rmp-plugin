@@ -62,7 +62,7 @@ public class Waypoint implements Listener {
                 Player player = event.getPlayer();
 
                 if (WaypointSign.isSignBelongsToPlayer(player.getUniqueId(), sign.getSide(Side.FRONT))) {
-                    WaypointSign.removeWaypoint(sign, player);    
+                    WaypointSign.removeWaypoint(sign.getLocation(), player);    
                 } else {
                     event.setCancelled(true);
                 }

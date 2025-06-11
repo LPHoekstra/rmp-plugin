@@ -14,7 +14,9 @@ public class WaypointCreateSign extends PlayerModifyingSign {
     @Override
     protected void handleEvent(SignChangeEvent event, String newName) {
         if (WaypointSign.isNewWaypoint(sign, event.getLine(0))) {
-            WaypointSign.createWaypoint(newName, event);
+            WaypointSign.createWaypoint(event.getLine(1), event.getBlock().getLocation(), event.getPlayer());
+
+            setWaypointLines(event);
         }
     }
 }

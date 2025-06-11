@@ -13,6 +13,8 @@ public class WaypointRenameSign extends PlayerModifyingSign {
 
     @Override
     protected void handleEvent(SignChangeEvent event, String newName) {
-        WaypointSign.renameWaypoint(sign, newName, event.getPlayer());
+        WaypointSign.renameWaypoint(event.getLine(1), event.getBlock().getLocation(), event.getPlayer());
+
+        setWaypointLines(event);
     }
 }
