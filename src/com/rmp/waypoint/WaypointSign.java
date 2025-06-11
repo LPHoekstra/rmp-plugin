@@ -32,9 +32,8 @@ public class WaypointSign {
             sign.getSide(Side.FRONT).getLine(0).trim().equals(WAYPOINT_FIRSTLINE);
     }
 
-    // TODO need to test
     private static boolean isWallSign(Sign sign) {
-        return sign instanceof WallSign;
+        return sign.getBlockData() instanceof WallSign;
     }
 
     /**
