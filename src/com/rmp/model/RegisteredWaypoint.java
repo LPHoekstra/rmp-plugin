@@ -3,6 +3,7 @@ package com.rmp.model;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+// TODO use the player uuid instead of a Player ?
 public class RegisteredWaypoint {
     private Location location;
     private String name;

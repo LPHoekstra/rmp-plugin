@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import com.rmp.model.PlayerWaypoints;
 import com.rmp.model.RegisteredWaypoint;
 
+// TODO a player can "discover" a new waypoint that belongs to others players
 public class WaypointSign {
     public static final String WAYPOINT_IDENTIFIER = "waypoint";
     public static final ChatColor WAYPOINT_COLOR = ChatColor.BLUE;
@@ -79,7 +80,6 @@ public class WaypointSign {
     }
 
     // TODO a player can remove waypoint with a command
-    // TODO handle when the sign destroyed from another source
     public static void removeWaypoint(Location waypointLocation, Player player) {
         PlayerWaypoints playerWaypoints = WaypointManager.getByPlayerId(player.getUniqueId());
 
@@ -90,6 +90,6 @@ public class WaypointSign {
         ;
 
         playerWaypoints.removeFromList(registeredWaypointToRemove);
-        player.sendMessage("Waypoint " + registeredWaypointToRemove.getName() + " supprimer");
+        player.sendMessage("Waypoint " + registeredWaypointToRemove.getName() + " supprimé");
     }
 }

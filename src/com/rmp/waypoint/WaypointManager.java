@@ -14,7 +14,7 @@ public class WaypointManager {
     }
 
     /**
-     * Used to create a PlayerWaypoints instance
+     * Used to create a PlayerWaypoints instance.
      * 
      * If there is no playerWaypoints with the player in the list, he's added to the list.
      * @param waypoint

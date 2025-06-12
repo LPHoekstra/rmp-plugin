@@ -53,21 +53,50 @@ public class Waypoint implements Listener {
     }
 
     // TODO need to test if another player can destroy it
-    // TODO permission for an op can anyway destroy it
-    // TODO what if a player break the block under the sign ?
+    // TODO protect the sign from burning
     @EventHandler
     public void onBlockBreakByPlayerEvent(BlockBreakEvent event) {
+        if (isTryingBreakUnderWaypoint(event) || isTryingBreakWaypoint(event) ) {
+            event.setCancelled(true);
+        }
+    }
+
+    /**
+     * if the player try to break the block under a waypoint sign
+     * @return true if the block above is a waypoint sign, otherwise return false.
+     */ 
+    private boolean isTryingBreakUnderWaypoint(BlockBreakEvent event) {
+        Block aboveBlock = event.getBlock().getWorld().getBlockAt(event.getBlock().getX(), event.getBlock().getY() + 1, event.getBlock().getZ());
+        if (aboveBlock.getState() instanceof Sign sign) {
+            if (WaypointSign.isWaypointSign(sign)) {
+                event.getPlayer().sendMessage("Block support d'un waypoint!");
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
+    /**
+     * if the player try to break a waypoint sign
+     * @return true if the waypoint doesn't belongs to the player,
+     * otherwise return false.
+     */
+    private boolean isTryingBreakWaypoint(BlockBreakEvent event) {
         if (event.getBlock().getState() instanceof Sign sign) {
             if (WaypointSign.isWaypointSign(sign)) {
                 Player player = event.getPlayer();
-
+        
                 if (WaypointSign.isSignBelongsToPlayer(player.getUniqueId(), sign.getSide(Side.FRONT))) {
                     WaypointSign.removeWaypoint(sign.getLocation(), player);    
                 } else {
-                    event.setCancelled(true);
+                    player.sendMessage("Ce waypoint ne t'appartiens pas!");
+                    return true;
                 }
             } 
         }
+        
+        return false;
     }
 
     /**

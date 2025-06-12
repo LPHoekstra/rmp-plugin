@@ -58,7 +58,7 @@ public class WaypointInventory implements Listener {
                     )
                 )
                 ||
-                // shift click, maybe don't need the clickedInventory
+                // shift click
                 event.getAction().equals(InventoryAction.MOVE_TO_OTHER_INVENTORY)
             ) {
                 return true;
