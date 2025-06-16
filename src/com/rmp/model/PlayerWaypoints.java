@@ -8,7 +8,6 @@ import org.bukkit.Location;
 
 // TODO add data persistence
 public class PlayerWaypoints {
-    // TODO can't have 2 RegisteredWaypoint with the same location
     private List<RegisteredWaypoint> list = new ArrayList<RegisteredWaypoint>();
     private UUID playerId;
     private String playerName;

@@ -14,7 +14,6 @@ import org.bukkit.entity.Player;
 import com.rmp.model.PlayerWaypoints;
 import com.rmp.model.RegisteredWaypoint;
 
-// TODO a player can "discover" a new waypoint that belongs to others players
 public class WaypointSign {
     public static final String WAYPOINT_IDENTIFIER = "waypoint";
     public static final ChatColor WAYPOINT_COLOR = ChatColor.BLUE;
@@ -67,9 +66,10 @@ public class WaypointSign {
 
     public static void createWaypoint(String waypointName, Location waypointLocation, Player player) {       
         if (!waypointName.trim().isEmpty()) {
+            UUID playerId = player.getUniqueId();
             
-            PlayerWaypoints playerWaypoints = WaypointManager.getByPlayerId(player.getUniqueId());
-            playerWaypoints.addToList(new RegisteredWaypoint(waypointName, waypointLocation, player));
+            PlayerWaypoints playerWaypoints = WaypointManager.getByPlayerId(playerId);
+            playerWaypoints.addToList(new RegisteredWaypoint(waypointName, waypointLocation, playerId));
         
             player.sendMessage("Waypoint " + waypointName + " créé");
         }

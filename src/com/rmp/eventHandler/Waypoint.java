@@ -87,7 +87,6 @@ public class Waypoint implements Listener {
         }
     }
 
-    // TODO need to move it elsewhere (not an eventhandler)
     /**
      * if the player try to break the block under a waypoint sign
      * @return true if the block above is a waypoint sign, otherwise return false.

@@ -1,18 +1,18 @@
 package com.rmp.model;
 
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
+import java.util.UUID;
 
-// TODO use the player uuid instead of a Player ?
+import org.bukkit.Location;
+
 public class RegisteredWaypoint {
     private Location location;
     private String name;
-    private Player player;
+    private UUID playerId;
 
-    public RegisteredWaypoint(String name, Location location, Player player) {
+    public RegisteredWaypoint(String name, Location location, UUID playerId) {
         this.name = name;
         this.location = location;
-        this.player = player;
+        this.playerId = playerId;
     }
 
     public Location getLocation() {
@@ -31,7 +31,7 @@ public class RegisteredWaypoint {
         this.name = name;
     }
 
-    public Player getPlayer() {
-        return this.player;
+    public UUID getPlayerId() {
+        return this.playerId;
     }
 }
