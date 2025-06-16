@@ -1,6 +1,8 @@
 package com.rmp.eventHandler;
 
 import java.util.List;
+import java.util.UUID;
+
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
@@ -23,6 +25,10 @@ import com.rmp.waypoint.WaypointSign;
 
 public class Waypoint implements Listener {
 
+    /**
+     * To open the waypoint inventory with a compass
+     * @param event
+     */
     @EventHandler
     public void onInteractWithACompass(PlayerInteractEvent event) {
         if (event.getMaterial().equals(Material.COMPASS)) {
@@ -30,9 +36,29 @@ public class Waypoint implements Listener {
         }
     }
 
+    // TODO need to test if another player can discovered it
+    /**
+     * To discover a waypoint that does not belongs to the player who clicked on the sign
+     * @param event
+     */
+    @EventHandler
+    public void onInteractOnWaypointSign(PlayerInteractEvent event) {
+        if (event.getClickedBlock() != null) {
+            if (event.getClickedBlock().getState() instanceof Sign sign) {
+                UUID playerUuid = event.getPlayer().getUniqueId();
+
+                if (WaypointSign.isWaypointSign(sign) && 
+                    !WaypointSign.isSignBelongsToPlayer(playerUuid, sign.getSide(Side.FRONT))
+                ) {
+                    WaypointSign.discoverWaypoint(sign, playerUuid);
+                }
+            }
+        }
+    }
+
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        WaypointManager.addToList(event.getPlayer().getUniqueId());
+        WaypointManager.addToList(event.getPlayer());
     }
 
     // TODO need to test if another player can modify a waypoint
@@ -61,6 +87,7 @@ public class Waypoint implements Listener {
         }
     }
 
+    // TODO need to move it elsewhere (not an eventhandler)
     /**
      * if the player try to break the block under a waypoint sign
      * @return true if the block above is a waypoint sign, otherwise return false.

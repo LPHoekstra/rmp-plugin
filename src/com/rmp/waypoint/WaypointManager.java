@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.bukkit.entity.Player;
+
 import com.rmp.model.PlayerWaypoints;
 
 public class WaypointManager {
@@ -19,14 +21,14 @@ public class WaypointManager {
      * If there is no playerWaypoints with the player in the list, he's added to the list.
      * @param waypoint
      */
-    public static void addToList(UUID playerUuid) {
+    public static void addToList(Player player) {
         for (PlayerWaypoints playerWaypoints : playerWaypointsList) {
-            if (playerWaypoints.getPlayer() == playerUuid) {
+            if (playerWaypoints.getPlayerId() == player.getUniqueId()) {
                 return;
             }
         }
 
-        playerWaypointsList.add(new PlayerWaypoints(playerUuid));
+        playerWaypointsList.add(new PlayerWaypoints(player.getUniqueId(), player.getName()));
     }
 
     /**
@@ -36,8 +38,20 @@ public class WaypointManager {
      */
     public static PlayerWaypoints getByPlayerId(UUID playerId) {
         return playerWaypointsList.stream()
-            .filter(playerWaypoints -> playerWaypoints.getPlayer().equals(playerId))
+            .filter(playerWaypoints -> playerWaypoints.getPlayerId().equals(playerId))
             .findFirst()
             .orElseThrow(() -> new IllegalArgumentException("No waypoint list found for player: " + playerId.toString()));
+    }
+
+    /**
+     * Get a specific PlayerWaypoints with the player name
+     * @param playerName
+     * @return
+     */
+    public static PlayerWaypoints getByPlayerName(String playerName) {
+        return playerWaypointsList.stream()
+            .filter(playerWaypoints -> playerWaypoints.getPlayerName().equals(playerName))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("No waypoint list found for player: " + playerName));
     }
 }

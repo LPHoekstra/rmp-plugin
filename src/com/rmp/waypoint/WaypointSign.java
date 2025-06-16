@@ -40,7 +40,7 @@ public class WaypointSign {
     /**
      * Verify if the player have a waypoint named like the sign name  
      * @param player
-     * @param targetSide
+     * @param targetSide must be the front side of the sign where the name of the waypoint is
      */
     public static boolean isSignBelongsToPlayer(UUID playerUUID, SignSide targetSide) {
         List<RegisteredWaypoint> registeredWaypointsList = WaypointManager.getByPlayerId(playerUUID).getList();
@@ -56,13 +56,9 @@ public class WaypointSign {
     }
 
     public static void renameWaypoint(String newName, Location waypointLocation, Player player) {
-        List<RegisteredWaypoint> playerWaypointsList = WaypointManager.getByPlayerId(player.getUniqueId()).getList();
+        PlayerWaypoints playerWaypoints = WaypointManager.getByPlayerId(player.getUniqueId());
 
-        RegisteredWaypoint registeredWaypointToRename = playerWaypointsList.stream()
-            .filter(playerWaypoint -> playerWaypoint.getLocation().equals(waypointLocation))
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Waypoint not find"))
-        ;
+        RegisteredWaypoint registeredWaypointToRename = PlayerWaypoints.getRegisteredWaypointByLocation(playerWaypoints, waypointLocation);
 
         registeredWaypointToRename.setName(newName);
 
@@ -83,13 +79,28 @@ public class WaypointSign {
     public static void removeWaypoint(Location waypointLocation, Player player) {
         PlayerWaypoints playerWaypoints = WaypointManager.getByPlayerId(player.getUniqueId());
 
-        RegisteredWaypoint registeredWaypointToRemove = playerWaypoints.getList().stream()
-            .filter(waypoint -> waypoint.getLocation().equals(waypointLocation))
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Waypoint not in the list"))
-        ;
+        RegisteredWaypoint registeredWaypointToRemove = PlayerWaypoints.getRegisteredWaypointByLocation(playerWaypoints, waypointLocation);
 
         playerWaypoints.removeFromList(registeredWaypointToRemove);
         player.sendMessage("Waypoint " + registeredWaypointToRemove.getName() + " supprimé");
+    }
+
+    /**
+     * 
+     * @param sign
+     * @param player
+     */
+    public static void discoverWaypoint(Sign sign, UUID playerUuid) {
+        if (isWaypointSign(sign)) {
+            String playerNameString = sign.getSide(Side.FRONT).getLine(2);
+
+            // Get the PlayerWaypoints of the player who created the waypoint
+            PlayerWaypoints playerWaypoints = WaypointManager.getByPlayerName(playerNameString);
+            // Get the waypoint in the list of the player who belongs the waypoint
+            RegisteredWaypoint discoveredRegisteredWaypoint = PlayerWaypoints.getRegisteredWaypointByLocation(playerWaypoints, sign.getLocation());
+
+            // Add the waypoint in the list of the player who clicked on
+            WaypointManager.getByPlayerId(playerUuid).addToList(discoveredRegisteredWaypoint);
+        }
     }
 }
