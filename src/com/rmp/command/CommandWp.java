@@ -25,7 +25,7 @@ public class CommandWp implements CommandExecutor {
             }
             // otherwise show the available waypoint
             else {
-                if (playerWaypoints.getList().isEmpty()) {
+                if (playerWaypoints.getRegisteredWaypointList().isEmpty()) {
                     msgToSend = "Aucun waypoint disponible";
                 } 
                 else {
@@ -42,11 +42,11 @@ public class CommandWp implements CommandExecutor {
     }
 
     private boolean isArgumentInCommand() {
-        return argument.length >= 1 && !playerWaypoints.getList().isEmpty();
+        return argument.length >= 1 && !playerWaypoints.getRegisteredWaypointList().isEmpty();
     }
 
     private void teleportToWaypoint(Player player) {
-        RegisteredWaypoint waypointToTeleport = playerWaypoints.getList().stream()
+        RegisteredWaypoint waypointToTeleport = playerWaypoints.getRegisteredWaypointList().stream()
             .filter(waypoint -> waypoint.getName().equals(argument[0]))
             .findFirst()
             .orElseThrow(() -> new IllegalArgumentException("Can't teleport because " + argument[0] + " is not valid"))
@@ -59,7 +59,7 @@ public class CommandWp implements CommandExecutor {
     private void getAvailableWaypoint() {
         msgToSend = "Waypoint disponible: ";
 
-        for (RegisteredWaypoint registeredWaypoint : playerWaypoints.getList()) {
+        for (RegisteredWaypoint registeredWaypoint : playerWaypoints.getRegisteredWaypointList()) {
             msgToSend = msgToSend + registeredWaypoint.getName() + ". ";
         }
     }

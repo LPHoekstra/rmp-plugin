@@ -70,7 +70,7 @@ public class WaypointInventory implements Listener {
     
     private void teleportPlayerToWaypoint(ItemStack currentItem) {       
         // Iteration on WaypointManager to find player, then on registeredWaypointsList to get the Location.
-        List<RegisteredWaypoint> registeredWaypoints = WaypointManager.getByPlayerId(getPlayer().getUniqueId()).getList();
+        List<RegisteredWaypoint> registeredWaypoints = WaypointManager.getByPlayerId(getPlayer().getUniqueId()).getRegisteredWaypointList();
         RegisteredWaypoint selectedRegisteredWaypoint = registeredWaypoints.stream()
         .filter(waypoint -> waypoint.getName().equals(currentItem.getItemMeta().getDisplayName()))
         .findFirst()
@@ -81,7 +81,7 @@ public class WaypointInventory implements Listener {
     }
     
     private ItemStack[] createWaypointsItems() {
-        List<RegisteredWaypoint> registeredWaypointsList = WaypointManager.getByPlayerId(getPlayer().getUniqueId()).getList();
+        List<RegisteredWaypoint> registeredWaypointsList = WaypointManager.getByPlayerId(getPlayer().getUniqueId()).getRegisteredWaypointList();
         List<ItemStack> waypointsItemStacksList = new ArrayList<ItemStack>();
         
         for (RegisteredWaypoint registeredWaypoints : registeredWaypointsList) {

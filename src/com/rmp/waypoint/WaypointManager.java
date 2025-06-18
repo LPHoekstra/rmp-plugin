@@ -8,11 +8,16 @@ import org.bukkit.entity.Player;
 
 import com.rmp.model.PlayerWaypoints;
 
+// must be a singleton
 public class WaypointManager {
     private static List<PlayerWaypoints> playerWaypointsList = new ArrayList<PlayerWaypoints>();
 
     public static List<PlayerWaypoints> getPlayerWaypointsList() {
         return playerWaypointsList;
+    }
+
+    public static void setList() {
+        // TODO to implement
     }
 
     /**
@@ -22,13 +27,15 @@ public class WaypointManager {
      * @param waypoint
      */
     public static void addToList(Player player) {
-        for (PlayerWaypoints playerWaypoints : playerWaypointsList) {
-            if (playerWaypoints.getPlayerId() == player.getUniqueId()) {
-                return;
-            }
+        boolean isPlayerNotInList = playerWaypointsList.stream()
+            .filter(playerWaypoint -> playerWaypoint.getPlayerId().equals(player.getUniqueId()))
+            .findFirst()
+            .isEmpty()
+        ;
+        
+        if (isPlayerNotInList) {
+            playerWaypointsList.add(new PlayerWaypoints(player.getUniqueId(), player.getName()));
         }
-
-        playerWaypointsList.add(new PlayerWaypoints(player.getUniqueId(), player.getName()));
     }
 
     /**

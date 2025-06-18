@@ -38,14 +38,16 @@ public class WaypointSign {
 
     /**
      * Verify if the player have a waypoint named like the sign name  
-     * @param player
+     * @param playerUUID from the player that is verified
      * @param targetSide must be the front side of the sign where the name of the waypoint is
      */
     public static boolean isSignBelongsToPlayer(UUID playerUUID, SignSide targetSide) {
-        List<RegisteredWaypoint> registeredWaypointsList = WaypointManager.getByPlayerId(playerUUID).getList();
+        List<RegisteredWaypoint> registeredWaypointsList = WaypointManager.getByPlayerId(playerUUID).getRegisteredWaypointList();
         Optional<RegisteredWaypoint> registeredWaypointOptional = registeredWaypointsList.stream()
             .filter(waypoint -> waypoint.getName().equals(targetSide.getLine(1)))
-            .findFirst();
+            .filter(waypoint -> waypoint.getPlayerId().equals(playerUUID))
+            .findFirst()
+        ;
 
         if (registeredWaypointOptional.isEmpty()) {
             return false;
