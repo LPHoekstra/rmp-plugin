@@ -6,6 +6,10 @@ import java.util.List;
 
 public class Json {
 
+    public static void readJsonToPlayerWaypointsList() {
+        // TODO to implement
+    }
+
     /**
      * Create a json based on Field from any class
      * @param <T>
@@ -20,8 +24,6 @@ public class Json {
                 for (T t : objectList) {
                     returnString = convertObjectToString(t, returnString);
                 }
-
-                // returnString = addLineSeparator(returnString);
                 
                 return returnString;
             } catch (IllegalAccessException exception) {
@@ -58,7 +60,6 @@ public class Json {
                     objectList.add(objectString);
                 }
 
-                // String array = createArrayString(objectList.toString());
                 fieldListString.add(convertKeyValueInJsonArray(field.getName(), objectList.toString()));
             } else {
                 String fieldString = convertKeyValueInJsonString(field.getName(), field.get(objectToConvert).toString());
