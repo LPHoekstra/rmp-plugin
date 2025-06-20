@@ -1,16 +1,17 @@
-package com.rmp.waypointRepository;
+package com.rmp.repository;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.rmp.model.PlayerWaypoints;
+import com.rmp.model.PlayerWaypoint;
 
 // TODO on server enable get the data in file and init the list WaypointManager
-// TODO on server disable save the list in WaypointManager
 public class WaypointRepository {
     private final String FILENAME = "waypoint.json";
     private Logger logger = null;
@@ -20,7 +21,7 @@ public class WaypointRepository {
         createFile();
     }
 
-    public void writeFile(List<PlayerWaypoints> list) {
+    public void writeFile(List<PlayerWaypoint> list) {
         try {
             FileWriter fileWriter = new FileWriter(FILENAME);
                 
@@ -34,14 +35,28 @@ public class WaypointRepository {
         }
     }
 
-    // private void getFileData() {
-    //     Scanner scanner = new Scanner(FILENAME);
-    //     while (scanner.hasNextLine()) {
-    //         scanner.nextLine();
-    //     }
-    //     scanner.close();
-    // }
+    // handle exception
+    public String getFileData() {
+        try {
+            File file = new File(FILENAME);
+            Scanner scanner = new Scanner(file);
+            String fileData = "";
+            
+            while (scanner.hasNextLine()) {
+                fileData = fileData + scanner.nextLine();
+            }
+            scanner.close();
+            
+            return fileData;
+        } catch (FileNotFoundException exception) {
+            throw new IllegalArgumentException(exception.getMessage());
+        }
+    }
     
+    /**
+     * 
+     * @return true if the file as been created otherwise return false
+     */
     private boolean createFile() {
         try {
             File file = new File(FILENAME);

@@ -5,8 +5,8 @@ import java.util.UUID;
 import org.bukkit.Location;
 
 public class RegisteredWaypoint {
-    private Location location;
     private String name;
+    private Location location;
     private UUID playerId;
 
     public RegisteredWaypoint(String name, Location location, UUID playerId) {

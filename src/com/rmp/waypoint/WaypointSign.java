@@ -11,7 +11,7 @@ import org.bukkit.block.data.type.WallSign;
 import org.bukkit.block.sign.Side;
 import org.bukkit.block.sign.SignSide;
 import org.bukkit.entity.Player;
-import com.rmp.model.PlayerWaypoints;
+import com.rmp.model.PlayerWaypoint;
 import com.rmp.model.RegisteredWaypoint;
 
 public class WaypointSign {
@@ -57,9 +57,9 @@ public class WaypointSign {
     }
 
     public static void renameWaypoint(String newName, Location waypointLocation, Player player) {
-        PlayerWaypoints playerWaypoints = WaypointManager.getByPlayerId(player.getUniqueId());
+        PlayerWaypoint playerWaypoints = WaypointManager.getByPlayerId(player.getUniqueId());
 
-        RegisteredWaypoint registeredWaypointToRename = PlayerWaypoints.getRegisteredWaypointByLocation(playerWaypoints, waypointLocation);
+        RegisteredWaypoint registeredWaypointToRename = PlayerWaypoint.getRegisteredWaypointByLocation(playerWaypoints, waypointLocation);
 
         registeredWaypointToRename.setName(newName);
 
@@ -70,7 +70,7 @@ public class WaypointSign {
         if (!waypointName.trim().isEmpty()) {
             UUID playerId = player.getUniqueId();
             
-            PlayerWaypoints playerWaypoints = WaypointManager.getByPlayerId(playerId);
+            PlayerWaypoint playerWaypoints = WaypointManager.getByPlayerId(playerId);
             playerWaypoints.addToList(new RegisteredWaypoint(waypointName, waypointLocation, playerId));
         
             player.sendMessage("Waypoint " + waypointName + " créé");
@@ -79,9 +79,9 @@ public class WaypointSign {
 
     // TODO a player can remove waypoint with a command
     public static void removeWaypoint(Location waypointLocation, Player player) {
-        PlayerWaypoints playerWaypoints = WaypointManager.getByPlayerId(player.getUniqueId());
+        PlayerWaypoint playerWaypoints = WaypointManager.getByPlayerId(player.getUniqueId());
 
-        RegisteredWaypoint registeredWaypointToRemove = PlayerWaypoints.getRegisteredWaypointByLocation(playerWaypoints, waypointLocation);
+        RegisteredWaypoint registeredWaypointToRemove = PlayerWaypoint.getRegisteredWaypointByLocation(playerWaypoints, waypointLocation);
 
         playerWaypoints.removeFromList(registeredWaypointToRemove);
         player.sendMessage("Waypoint " + registeredWaypointToRemove.getName() + " supprimé");
@@ -97,9 +97,9 @@ public class WaypointSign {
             String playerNameString = sign.getSide(Side.FRONT).getLine(2);
 
             // Get the PlayerWaypoints of the player who created the waypoint
-            PlayerWaypoints playerWaypoints = WaypointManager.getByPlayerName(playerNameString);
+            PlayerWaypoint playerWaypoints = WaypointManager.getByPlayerName(playerNameString);
             // Get the waypoint in the list of the player who belongs the waypoint
-            RegisteredWaypoint discoveredRegisteredWaypoint = PlayerWaypoints.getRegisteredWaypointByLocation(playerWaypoints, sign.getLocation());
+            RegisteredWaypoint discoveredRegisteredWaypoint = PlayerWaypoint.getRegisteredWaypointByLocation(playerWaypoints, sign.getLocation());
 
             // Add the waypoint in the list of the player who clicked on
             WaypointManager.getByPlayerId(playerUuid).addToList(discoveredRegisteredWaypoint);

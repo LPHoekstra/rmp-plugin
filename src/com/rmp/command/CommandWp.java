@@ -5,19 +5,19 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import com.rmp.model.PlayerWaypoints;
+import com.rmp.model.PlayerWaypoint;
 import com.rmp.model.RegisteredWaypoint;
 import com.rmp.waypoint.WaypointManager;
 
 public class CommandWp implements CommandExecutor {
     private String msgToSend = "";
-    private PlayerWaypoints playerWaypoints = null;
+    private PlayerWaypoint playerWaypoint = null;
     private String[] argument = null;
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (sender instanceof Player player) {
-            playerWaypoints = WaypointManager.getByPlayerId(player.getUniqueId());
+            playerWaypoint = WaypointManager.getByPlayerId(player.getUniqueId());
             argument = args;
 
             if (isArgumentInCommand()) {
@@ -25,7 +25,7 @@ public class CommandWp implements CommandExecutor {
             }
             // otherwise show the available waypoint
             else {
-                if (playerWaypoints.getRegisteredWaypointList().isEmpty()) {
+                if (playerWaypoint.getRegisteredWaypointList().isEmpty()) {
                     msgToSend = "Aucun waypoint disponible";
                 } 
                 else {
@@ -42,11 +42,11 @@ public class CommandWp implements CommandExecutor {
     }
 
     private boolean isArgumentInCommand() {
-        return argument.length >= 1 && !playerWaypoints.getRegisteredWaypointList().isEmpty();
+        return argument.length >= 1 && !playerWaypoint.getRegisteredWaypointList().isEmpty();
     }
 
     private void teleportToWaypoint(Player player) {
-        RegisteredWaypoint waypointToTeleport = playerWaypoints.getRegisteredWaypointList().stream()
+        RegisteredWaypoint waypointToTeleport = playerWaypoint.getRegisteredWaypointList().stream()
             .filter(waypoint -> waypoint.getName().equals(argument[0]))
             .findFirst()
             .orElseThrow(() -> new IllegalArgumentException("Can't teleport because " + argument[0] + " is not valid"))
@@ -59,7 +59,7 @@ public class CommandWp implements CommandExecutor {
     private void getAvailableWaypoint() {
         msgToSend = "Waypoint disponible: ";
 
-        for (RegisteredWaypoint registeredWaypoint : playerWaypoints.getRegisteredWaypointList()) {
+        for (RegisteredWaypoint registeredWaypoint : playerWaypoint.getRegisteredWaypointList()) {
             msgToSend = msgToSend + registeredWaypoint.getName() + ". ";
         }
     }
