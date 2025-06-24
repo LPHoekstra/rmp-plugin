@@ -16,7 +16,7 @@ public class RmpPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         // must fetch the json data from waypoint.json
-        // new TestObjectRepository().findAll();
+        new TestObjectRepository().findAll();
         
         // register events
         pluginManager.registerEvents(new DropMobEggOnDeath(), this);

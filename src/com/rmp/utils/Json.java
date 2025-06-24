@@ -1,5 +1,6 @@
 package com.rmp.utils;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.Map;
 
 import com.rmp.exception.InvalidFormatException;
 import com.rmp.exception.JsonException;
+import com.rmp.model.ConstructorParams;
 
 // TODO implement the possibility to read an array of object as a value
 // TODO store the class in the json to have a dynamic access
@@ -80,37 +82,56 @@ public class Json {
             if (!jsonString.startsWith("[")) {
                 throw new InvalidFormatException("Data is not a json");
             }
-
+            
             Class<?> classDefinition = Class.forName(className);
-            Field[] fields = classDefinition.getDeclaredFields();
-            List<T> listToSend = new ArrayList<>();
-
+            List<T> instanceList = new ArrayList<>();
+            // TODO must handle if a value is an array
             List<Map<String, String>> objectListInMap = getListMapFromArray(jsonString);
             
-            for (Map<String,String> map : objectListInMap) {
-                List<String> constructorParamList = new ArrayList<>();
-                for (Field field : fields) {
-                    constructorParamList.add(map.get(field.getName()));
-                }
+            for (Map<String, String> map : objectListInMap) {
+                
+                ConstructorParams constructorParams = createParam(map, classDefinition);
 
-                // TODO refactor the new instance. (create method too)
-                Object[] constructorParams = constructorParamList.toArray();
-                T object = (T) classDefinition.getDeclaredConstructors()[0].newInstance(constructorParams);
-
-                listToSend.add(object);
+                T newInstance = createInstance(constructorParams, classDefinition);
+                
+                instanceList.add(newInstance);
             }
-                    
-            return listToSend;
+            
+            return instanceList;
         } catch (ClassNotFoundException e) {
             throw new JsonException("Error during the reading of the json: " + e.getMessage(), e.getCause());
-        } catch (InstantiationException e) {
-            throw new JsonException("Error during the reading of the json: " + e.getMessage(), e.getCause());
-        } catch (IllegalAccessException e) {
-            throw new JsonException("Error during the reading of the json: " + e.getMessage(), e.getCause());
-        } catch (InvocationTargetException e) {
-            throw new JsonException("Error during the reading of the json: " + e.getMessage(), e.getCause());
-        } catch (SecurityException e) {
-            throw new JsonException("Error during the reading of the json: " + e.getMessage(), e.getCause());
+        }
+    }
+
+    private static ConstructorParams createParam(Map<String,String> map, Class<?> classDefinition) {
+        Field[] fields = classDefinition.getDeclaredFields();
+
+        List<String> paramList = new ArrayList<>();
+        List<Class<?>> paramTypeList = new ArrayList<Class<?>>();
+
+        for (Field field : fields) {
+            field.setAccessible(true);
+            String fieldName = field.getName();
+            String value = map.get(fieldName);
+
+            paramList.add(value);
+            paramTypeList.add(field.getType());
+        }
+        
+        return new ConstructorParams(paramList, paramTypeList);
+    }
+
+    private static <T> T createInstance(ConstructorParams constructorParams, Class<?> classDefinition) {
+        try {
+            Class<?>[] paramTypes = constructorParams.ParamTypeList().toArray(new Class<?>[0]);
+            Object[] params = constructorParams.ParamList().toArray();
+
+            Constructor<?> constructor = classDefinition.getDeclaredConstructor(paramTypes);
+            return (T) constructor.newInstance(params);
+        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+                | InvocationTargetException | NoSuchMethodException | SecurityException e) 
+        {
+            throw new JsonException("Error during instance creation: " + e.getMessage(), e.getCause());
         }
     }
     
@@ -119,19 +140,21 @@ public class Json {
      * @param array with the object inside
      * @return the list
      */
-    private static List<Map<String, String>> getListMapFromArray(String array) {
+    private static <T> List<Map<String, T>> getListMapFromArray(String array) {
         if (!array.startsWith("[{") && !array.endsWith("}]")) {
             throw new InvalidFormatException("Must be an array of object");
         }
 
-        List<Map<String, String>> objectList = new ArrayList<Map<String, String>>();
+        // TODO use the reflection to get the value for a key
+
+        List<Map<String, T>> objectList = new ArrayList<Map<String, T>>();
         // split the object in the array
         String[] objectArray = removeHook(array).split("},");
         
         for (String object : objectArray) {
             object = removeBrace(object);
             // for each object, get the key value and put it in the objectList
-            Map<String, String> objectKeyValue = getKeyValue(object.trim());
+            Map<String, T> objectKeyValue = getKeyValue(object.trim());
             
             objectList.add(objectKeyValue);
         }
@@ -144,21 +167,21 @@ public class Json {
      * @param jsonObject as "location": "location", "name": "test", "playerId": "b37d3ee9-17ca-4f03-a869-7e1a9c0e4a88"
      * @return
      */
-    private static HashMap<String, String> getKeyValue(String jsonObject) {
+    private static <T> HashMap<String, T> getKeyValue(String jsonObject) {
         if (!jsonObject.startsWith("\"") && !jsonObject.endsWith("\"")) {
             throw new InvalidFormatException("Must be key value");
         }
 
-        HashMap<String, String> keyValueMap = new HashMap<>();
+        HashMap<String, T> keyValueMap = new HashMap<>();
 
         String[] splittedObject = jsonObject.split(",");
-
+        
         for (String keyValue : splittedObject) {
             String[] keyValuesplitted = keyValue.split(":");
-            String key = removeDoubleQuote(keyValuesplitted[0]);
-            String value = removeDoubleQuote(keyValuesplitted[1]);
+            String key = removeDoubleQuote(keyValuesplitted[0]).trim();
+            T value = (T) removeDoubleQuote(keyValuesplitted[1]).trim();
 
-            keyValueMap.put(key.trim(), value.trim());
+            keyValueMap.put(key, value);
         }
 
         return keyValueMap;
