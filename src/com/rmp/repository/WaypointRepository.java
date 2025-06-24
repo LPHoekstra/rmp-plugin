@@ -12,6 +12,7 @@ public class WaypointRepository implements Repository<PlayerWaypoint> {
     // TODO if an exception is catch, the file is not changed.
 
     // TODO to implement
+    @Override
     public boolean saveAll() {
         WaypointManager.getPlayerWaypointsList();
         String test = "to implement";
@@ -21,6 +22,7 @@ public class WaypointRepository implements Repository<PlayerWaypoint> {
         return true;
     }
 
+    @Override
     public List<PlayerWaypoint> findAll() {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'findAll'");

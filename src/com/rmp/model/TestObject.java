@@ -1,4 +1,6 @@
 package com.rmp.model;
 
-public record TestObject(String prenom, String nom, String age, String ville) {
+import java.util.List;
+
+public record TestObject(String prenom, String nom, String age, List<TestObject2> coordinates) {
 }

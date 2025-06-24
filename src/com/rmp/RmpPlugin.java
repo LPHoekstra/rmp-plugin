@@ -8,6 +8,7 @@ import com.rmp.eventHandler.DropMobEggOnDeath;
 import com.rmp.eventHandler.DropPlayerHeadOnDeath;
 import com.rmp.eventHandler.Waypoint;
 import com.rmp.recipe.Recipe;
+import com.rmp.repository.TestObjectRepository;
 
 public class RmpPlugin extends JavaPlugin {
     private PluginManager pluginManager = getServer().getPluginManager();
@@ -15,7 +16,7 @@ public class RmpPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         // must fetch the json data from waypoint.json
-        
+        // new TestObjectRepository().findAll();
         
         // register events
         pluginManager.registerEvents(new DropMobEggOnDeath(), this);
@@ -30,6 +31,6 @@ public class RmpPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         // must save the data from WaypointManager list in waypoint.json
-        
+        new TestObjectRepository().saveAll();
     }
 }

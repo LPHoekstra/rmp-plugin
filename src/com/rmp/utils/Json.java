@@ -6,9 +6,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import com.rmp.exception.InvalidFormatException;
 import com.rmp.exception.JsonException;
 
+// TODO implement the possibility to read an array of object as a value
 // TODO store the class in the json to have a dynamic access
 public class Json {
 
@@ -22,13 +24,13 @@ public class Json {
      */
     public static <T> String createJsonFromList(List<T> objectList) {
         try {
-            List<String> testList = new ArrayList<>();
+            List<String> arrayList = new ArrayList<>();
 
             for (T t : objectList) {
-                testList.add(convertObjectToString(t));
+                arrayList.add(convertObjectToString(t));
             }
 
-            return testList.toString();
+            return joinListToJsonArray(arrayList);
         } catch (Exception exception) {
             throw new JsonException("Failed to create the json", exception.getCause());
         }
@@ -49,9 +51,17 @@ public class Json {
             field.setAccessible(true);
             
             String key = field.getName();
-            String value = field.get(objectToConvert).toString();
+            Object value = field.get(objectToConvert);
 
-            fieldListString.add(convertKeyValueFromString(key, value));
+            // check if is a list of object
+            if (value instanceof List valueList) {
+                fieldListString.add(toJsonKeyValueArray(key, createJsonFromList(valueList)));
+            }
+
+            else {
+                fieldListString.add(toJsonKeyValueString(key, value.toString()));
+            }
+            
         }
         
         return joinListToJsonObject(fieldListString);
@@ -71,10 +81,11 @@ public class Json {
                 throw new InvalidFormatException("Data is not a json");
             }
 
-            List<T> listToSend = new ArrayList<>();
-            List<Map<String, String>> objectListInMap = getListMapFromArray(jsonString);
             Class<?> classDefinition = Class.forName(className);
             Field[] fields = classDefinition.getDeclaredFields();
+            List<T> listToSend = new ArrayList<>();
+
+            List<Map<String, String>> objectListInMap = getListMapFromArray(jsonString);
             
             for (Map<String,String> map : objectListInMap) {
                 List<String> constructorParamList = new ArrayList<>();
@@ -114,7 +125,7 @@ public class Json {
         }
 
         List<Map<String, String>> objectList = new ArrayList<Map<String, String>>();
-          
+        // split the object in the array
         String[] objectArray = removeHook(array).split("},");
         
         for (String object : objectArray) {
@@ -185,12 +196,32 @@ public class Json {
     private static String removeDoubleQuote(String string) {
         return string.replace("\"", "");
     }
+
+    /**
+     * Transform a pair of key / value, and value is an array to a pair of json key / value  
+     * @param key 
+     * @param arrayValue an array in string 
+     * @return the json key value like: '"exemple": [{"exemple1: exemple1", "exemple2": "exemple2"}]'
+     */
+    private static String toJsonKeyValueArray(String key, String arrayValue) {
+        return "\"" + key + "\"" + ": " + arrayValue;
+    }
     
-    private static String convertKeyValueFromString(String key, String value) {
+    /**
+     * Transform a pair of key / value string to a pair of json key / value
+     * @param key
+     * @param value
+     * @return the json key value like: '"exemple": "exemple2"'
+     */
+    private static String toJsonKeyValueString(String key, String value) {
         return "\"" + key + "\"" + ": " + "\"" + value + "\"";
     }
     
     private static String joinListToJsonObject(List<String> listString) {
         return "{ " + String.join(", ", listString) + " }";
+    }
+
+    private static String joinListToJsonArray(List<String> listToJoin) {
+        return "[" + String.join(", " + System.lineSeparator(), listToJoin) + "]";
     }
 }
