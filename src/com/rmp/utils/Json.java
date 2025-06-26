@@ -4,9 +4,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.bukkit.Bukkit;
 
 import com.rmp.exception.InvalidFormatException;
 import com.rmp.exception.JsonException;
@@ -45,9 +48,11 @@ public class Json {
      * @return
      * @throws IllegalAccessException
      */
-    private static <T> String convertObjectToString(T objectToConvert) throws IllegalAccessException {
+    private static <T extends Object> String convertObjectToString(T objectToConvert) throws IllegalAccessException {
         List<String> fieldListString = new ArrayList<String>();
-        Field[] fields = objectToConvert.getClass().getDeclaredFields();
+        Class<?> clazz = objectToConvert.getClass();
+        String className = clazz.getName();
+        Field[] fields = clazz.getDeclaredFields();
         
         for (Field field : fields) {
             field.setAccessible(true);
@@ -62,15 +67,17 @@ public class Json {
 
             else {
                 fieldListString.add(toJsonKeyValueString(key, value.toString()));
-            }
-            
+            } 
         }
+
+        fieldListString.add(classNameInKeyValue(className));
         
         return joinListToJsonObject(fieldListString);
     }
 
+    
     //////////// method to read a json to an java object ////////////
-
+    
     /**
      * Transform a json in a string format to an java object by passing the class name in param with the json.
      * @param className corresponding to the object in json 
@@ -85,13 +92,15 @@ public class Json {
             
             Class<?> classDefinition = Class.forName(className);
             List<T> instanceList = new ArrayList<>();
-            // TODO must handle if a value is an array
-            List<Map<String, String>> objectListInMap = getListMapFromArray(jsonString);
+            List<Map<String, String>> objectListInMap = getListMapFromArrayOfObject(jsonString);
+            Bukkit.getLogger().info(objectListInMap.toString());
             
+            // TODO must handle if a value is an array
+            // check if the value is a string or a list
             for (Map<String, String> map : objectListInMap) {
                 
                 ConstructorParams constructorParams = createParam(map, classDefinition);
-
+                
                 T newInstance = createInstance(constructorParams, classDefinition);
                 
                 instanceList.add(newInstance);
@@ -102,113 +111,133 @@ public class Json {
             throw new JsonException("Error during the reading of the json: " + e.getMessage(), e.getCause());
         }
     }
-
+    
     private static ConstructorParams createParam(Map<String,String> map, Class<?> classDefinition) {
         Field[] fields = classDefinition.getDeclaredFields();
-
+        
         List<String> paramList = new ArrayList<>();
         List<Class<?>> paramTypeList = new ArrayList<Class<?>>();
-
+        
         for (Field field : fields) {
             field.setAccessible(true);
             String fieldName = field.getName();
             String value = map.get(fieldName);
-
+            
             paramList.add(value);
             paramTypeList.add(field.getType());
         }
         
         return new ConstructorParams(paramList, paramTypeList);
     }
-
+    
     private static <T> T createInstance(ConstructorParams constructorParams, Class<?> classDefinition) {
         try {
             Class<?>[] paramTypes = constructorParams.ParamTypeList().toArray(new Class<?>[0]);
             Object[] params = constructorParams.ParamList().toArray();
-
+            
             Constructor<?> constructor = classDefinition.getDeclaredConstructor(paramTypes);
             return (T) constructor.newInstance(params);
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-                | InvocationTargetException | NoSuchMethodException | SecurityException e) 
+        | InvocationTargetException | NoSuchMethodException | SecurityException e) 
         {
             throw new JsonException("Error during instance creation: " + e.getMessage(), e.getCause());
         }
     }
     
     /**
-     * Create a list of map from a json array in string ex: [{ "test2": "test2", "test3": "test3" }, { "test4": "test4", "test5": "test5" }]
-     * @param array with the object inside
-     * @return the list
-     */
-    private static <T> List<Map<String, T>> getListMapFromArray(String array) {
-        if (!array.startsWith("[{") && !array.endsWith("}]")) {
-            throw new InvalidFormatException("Must be an array of object");
-        }
-
-        // TODO use the reflection to get the value for a key
-
-        List<Map<String, T>> objectList = new ArrayList<Map<String, T>>();
-        // split the object in the array
-        String[] objectArray = removeHook(array).split("},");
-        
-        for (String object : objectArray) {
-            object = removeBrace(object);
-            // for each object, get the key value and put it in the objectList
-            Map<String, T> objectKeyValue = getKeyValue(object.trim());
-            
-            objectList.add(objectKeyValue);
-        }
-
-        return objectList;
-    }
-
-    /**
-     * Get a HashMap of key value from a json object
-     * @param jsonObject as "location": "location", "name": "test", "playerId": "b37d3ee9-17ca-4f03-a869-7e1a9c0e4a88"
+     * Create a list of map from an array of object in json in string.
+     * @param <T> is a list or a string
+     * @param arrayOfObject
      * @return
      */
-    private static <T> HashMap<String, T> getKeyValue(String jsonObject) {
-        if (!jsonObject.startsWith("\"") && !jsonObject.endsWith("\"")) {
-            throw new InvalidFormatException("Must be key value");
+    private static <T> List<Map<String, T>> getListMapFromArrayOfObject(String arrayOfObject) {
+        // TODO verification of arrayOfObject
+        try {
+            List<Map<String, T>> objectList = new ArrayList<Map<String, T>>();
+            String className = getClassNameInArray(arrayOfObject);
+            Class<?> clazz = Class.forName(className);
+            
+            // add double quote in class name for extra verification
+            String[] objects = arrayOfObject.split(addDoubleQuote(className));
+            
+            // remove the last element of the array " }]". another solution ?
+            if (objects[objects.length - 1].startsWith(" }]")) {
+                objects = Arrays.copyOf(objects, objects.length - 1);
+            }
+            
+            // for each object, get the key value and put it in the objectList
+            for (String object : objects) {               
+                Map<String, T> objectInKeyValue = getKeyValueFromJson(object.trim(), clazz);
+                objectList.add(objectInKeyValue);
+            }
+            
+            return objectList;
+        } catch (ClassNotFoundException e)  {
+            throw new JsonException("Class not found in array: " + e.getMessage(), e.getCause());
         }
-
+    }
+    
+    /**
+     * Get a HashMap of key value from a json object
+     * @param <T> is a list or a string
+     * @param jsonObject
+     * @param clazz
+     * @return
+     */
+    private static <T> HashMap<String, T> getKeyValueFromJson(String jsonObject, Class<?> clazz) {
+        // TODO verification of jsonObject
         HashMap<String, T> keyValueMap = new HashMap<>();
-
-        String[] splittedObject = jsonObject.split(",");
+        Field[] fields = clazz.getDeclaredFields();
         
-        for (String keyValue : splittedObject) {
-            String[] keyValuesplitted = keyValue.split(":");
-            String key = removeDoubleQuote(keyValuesplitted[0]).trim();
-            T value = (T) removeDoubleQuote(keyValuesplitted[1]).trim();
-
-            keyValueMap.put(key, value);
+        for (Field field : fields) {
+            String fieldName = field.getName();
+            String stringAfterSelectedKey = jsonObject.split(addDoubleQuote(fieldName))[1];
+            
+            // if is a string
+            if (stringAfterSelectedKey.startsWith(": \"")) {
+                String value = stringAfterSelectedKey.split(",")[0];
+                T cleanValue = (T) cleanValue(value);
+                
+                keyValueMap.put(fieldName, cleanValue);
+            }
+            // if is an array
+            else if(stringAfterSelectedKey.startsWith(": [")) {
+                T arrayFromValue = (T) getListMapFromArrayOfObject(stringAfterSelectedKey);
+                keyValueMap.put(fieldName, arrayFromValue);
+            }
         }
-
+        
         return keyValueMap;
     }
 
-    //////////// reused method ////////////
+    /**
+     * Remove double quote to get only the value string
+     * @param value
+     * @return
+     */
+    private static String cleanValue(String value) {
+        return removeDoubleDot(removeDoubleQuote(value)).trim();
+    }
 
     /**
-     * 
-     * @param string
-     * @return a string without any brace
+     * Get the class name of this array passed in param
+     * @param array
+     * @return
      */
-    private static String removeBrace(String string) {
-        String resultString = string;
-        
-        if (resultString.contains("{") || resultString.contains("}")) {
-            resultString = resultString.replace("{", "");
-            resultString = resultString.replace("}", "");
-        }
-        
-        return resultString;
+    private static String getClassNameInArray(String array) {
+        String[] arrayOfClass = array.split("\"class_\":");
+        String classNameOfThisArray = arrayOfClass[arrayOfClass.length - 1];
+        classNameOfThisArray = classNameOfThisArray.split("\"")[1];
+        return removeDoubleQuote(classNameOfThisArray).trim();
     }
+
     
-    private static String removeHook(String string) {
-        string = string.replace("[", "");
-        string = string.replace("]", "");
-        return string;
+    private static String removeDoubleDot(String string) {
+        return string.replace(":", "");
+    } 
+    
+    private static String addDoubleQuote(String string) {
+        return "\"" + string + "\"";
     }
 
     /**
@@ -218,6 +247,15 @@ public class Json {
      */
     private static String removeDoubleQuote(String string) {
         return string.replace("\"", "");
+    }
+    
+    /**
+     * 
+     * @param className in string
+     * @return ""class_": "exemple.class.name""
+     */
+    private static String classNameInKeyValue(String className) {
+        return "\"class_\": " + "\"" + className + "\""; 
     }
 
     /**
