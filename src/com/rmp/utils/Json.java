@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.rmp.exception.InvalidFormatException;
 import com.rmp.exception.JsonException;
 
 // TODO handle different type of value, actually only String and List type as been tested
@@ -20,33 +19,33 @@ public class Json {
     //////////// method to create a json from a java object ////////////
 
     /**
-     * Create a json based on Field from any class
-     * @param <T>
-     * @param objectList
-     * @return a json in a string format
+     * Create a json based on Field from any class.
+     * @param <ObjectType> ObjectType correspond to a java object.
+     * @param objectList list of java object to convert.
+     * @return a json in a string format.
      */
-    public static <T> String createJsonFromList(List<T> objectList) {
+    public static <ObjectType> String createJsonFromList(List<ObjectType> objectList) {
         try {
             List<String> arrayList = new ArrayList<>();
 
-            for (T t : objectList) {
-                arrayList.add(convertObjectToString(t));
+            for (ObjectType object : objectList) {
+                arrayList.add(convertObjectToString(object));
             }
 
             return joinListToJsonArray(arrayList);
-        } catch (Exception exception) {
-            throw new JsonException("Failed to create the json", exception.getCause());
+        } catch (Exception e) {
+            throw new JsonException("Failed to create the json: " + e.getMessage(), e.getCause());
         }
     }
 
     /**
-     * convert an object to string with all field as string
-     * @param <T>
-     * @param objectToConvert
-     * @return
+     * Convert an object to string with all field as string.
+     * @param <ObjectType> ObjectType correspond to a java object.
+     * @param objectToConvert java object to convert.
+     * @return The converted object in string.
      * @throws IllegalAccessException
      */
-    private static <T extends Object> String convertObjectToString(T objectToConvert) throws IllegalAccessException {
+    private static <ObjectType> String convertObjectToString(ObjectType objectToConvert) throws IllegalAccessException {
         List<String> fieldListString = new ArrayList<String>();
         Class<?> clazz = objectToConvert.getClass();
         String className = clazz.getName();
@@ -77,20 +76,17 @@ public class Json {
     //////////// method to read a json to an java object ////////////
     
     /**
-     * Transform a json in a string format to an java object by passing the class name in param with the json.
-     * @param className corresponding to the object in json 
-     * @param jsonString
-     * @return a list of object corresponding to the class passed in param
+     * Transform a json in a string format to an java object.
+     * @param <ValueType> is a value in a Map.
+     * @param <ObjectType> ObjectType correspond to a java object.
+     * @param jsonString a string in json format.
+     * @return a list of object corresponding to the class passed in param.
      */
-    public static <T, O> List<O> readJsonToList(String jsonString) {
-        try {
-            if (!jsonString.startsWith("[")) {
-                throw new InvalidFormatException("Data is not a json");
-            }
+    public static <ValueType, ObjectType> List<ObjectType> readJsonToList(String jsonString) {
+        try {           
+            List<Map<String, ValueType>> objectListMap = getListMapFromArrayOfObject(jsonString);
             
-            List<Map<String, T>> objectListMap = getListMapFromArrayOfObject(jsonString);
-            
-            List<O> instanceList = createListObject(objectListMap);
+            List<ObjectType> instanceList = createListObject(objectListMap);
             
             return instanceList;
         } catch (Exception e) {
@@ -98,12 +94,19 @@ public class Json {
         }
     }
 
-    private static <O extends Object, T> List<O> createListObject(List<Map<String, T>> objectListMap) {
-        List<O> instanceList = new ArrayList<O>();
+    /**
+     * Create a list of java object from a list of map.
+     * @param <ObjectType> ObjectType correspond to a java object.
+     * @param <ValueType> is a value in a Map.
+     * @param objectListMap 
+     * @return a list of java object.
+     */
+    private static <ObjectType, ValueType> List<ObjectType> createListObject(List<Map<String, ValueType>> objectListMap) {
+        List<ObjectType> instanceList = new ArrayList<ObjectType>();
 
-        for (Map<String, T> map : objectListMap) {
+        for (Map<String, ValueType> map : objectListMap) {
             // create an instance of the object
-            O newInstance = createObject(map);
+            ObjectType newInstance = createObject(map);
             
             instanceList.add(newInstance);
         }
@@ -112,69 +115,72 @@ public class Json {
     }
 
     /**
-     * 
-     * @param <O> is an instance of a java object
-     * @param <T> is the value from the key / value map
-     * @param <L> is the value for the param
+     * Create a java object from a map.
+     * @param <ObjectType> is an instance of a java object.
+     * @param <ValueType> is the value from the key / value map.
+     * @param <ParamValue> is a value for the param list.
      * @param object
      * @param objectClass
-     * @return
+     * @return an java object.
      */
-    private static <O extends Object, T, L> O createObject(Map<String, T> object) {
-        List<L> paramList = new ArrayList<L>();
+    private static <ObjectType, ValueType, ParamValue> ObjectType createObject(Map<String, ValueType> object) {
+        List<ParamValue> paramList = new ArrayList<ParamValue>();
         List<Class<?>> paramTypeList = new ArrayList<Class<?>>();
         Class<?> classDefinition = getObjectClass(object);
         
         Field[] fields = classDefinition.getDeclaredFields();
         for (Field field : fields) {
             field.setAccessible(true);
-            String keyFieldName = field.getName();
-            T valueField = object.get(keyFieldName);
-            
-            // if an object is a list of object
-            if (valueField instanceof List) {
-                valueField.getClass();
-                List<Map<String, T>> objectList = (List<Map<String, T>>) valueField;
-
-                List<O> instanceList = createListObject(objectList);
-                paramList.add((L) instanceList);
-            }
-
-            else {
-                paramList.add((L) valueField);
-            }
-
+            ParamValue value = extractFieldValue(field, object);
+            paramList.add(value);
             paramTypeList.add(field.getType());
         }
 
-        O newInstance = createInstance(paramList, paramTypeList, classDefinition);
-
+        ObjectType newInstance = createInstance(paramList, paramTypeList, classDefinition);
         return newInstance;
     }
 
     /**
-     * Get the class name of the object stored in the object with the key "class_"
-     * @param <T>
-     * @param object is the map from a json object
-     * @return the class
+     * Extract the value of a with the field name from a map.
+     * @param <FieldValue> FieldValue is the value retrieved.
+     * @param <ValueType> ValueType is the value from the key / value map.
+     * @param field of the value to extract.
+     * @param object 
+     * @return the value of the field.
      */
-    private static <T> Class<?> getObjectClass(Map<String, T> object) {
-        try {
-            String className = (String) object.get(CLASS_KEY);
-            Class<?> classDefinition = Class.forName(className);
-            return classDefinition;
-        } catch (ClassNotFoundException e) {
-            throw new JsonException("Class not found in object: " + e.getMessage(), e.getCause());
+    private static <FieldValue, ValueType> FieldValue extractFieldValue(Field field, Map<String, ValueType> object) {
+        String keyFieldName = field.getName();
+        ValueType valueField = object.get(keyFieldName);
+        
+        // if an object is a list of object
+        if (valueField instanceof List) {
+            valueField.getClass();
+            List<Map<String, ValueType>> objectList = (List<Map<String, ValueType>>) valueField;
+            return (FieldValue) createListObject(objectList);
+        }
+
+        else {
+            return (FieldValue) valueField;
         }
     }
     
-    private static <L, O> O createInstance(List<L> paramList, List<Class<?>> paramTypeList, Class<?> classDefinition) {
+    /**
+     * Create an instance of an object with a list of value and a list of type from those value
+     * which needs to be in the same order.
+     * @param <L> 
+     * @param <ObjectType> ObjectType is an instance of object.
+     * @param paramList is a list with the value of an object.
+     * @param paramTypeList is a list with the type of the value to choose wich constructor is use.
+     * @param classDefinition class of the object.
+     * @return a new instance.
+     */
+    private static <L, ObjectType> ObjectType createInstance(List<L> paramList, List<Class<?>> paramTypeList, Class<?> classDefinition) {
         try {
             Class<?>[] paramTypes = paramTypeList.toArray(new Class<?>[0]);
             Object[] params = paramList.toArray();
             
             Constructor<?> constructor = classDefinition.getDeclaredConstructor(paramTypes);
-            return (O) constructor.newInstance(params);
+            return (ObjectType) constructor.newInstance(params);
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
         | InvocationTargetException | NoSuchMethodException | SecurityException e) 
         {
@@ -216,7 +222,7 @@ public class Json {
     }
     
     /**
-     * Get a HashMap of key value from a json object
+     * Get a HashMap of key value from a json object with the class name corresponding to the java object stored in it.
      * @param <T> is a list or a string
      * @param jsonObject
      * @param clazz
@@ -225,7 +231,6 @@ public class Json {
     private static <T> Map<String, T> getKeyValueFromJson(String jsonObject, Class<?> clazz) {
         // TODO verification of jsonObject
         Map<String, T> keyValueMap = new HashMap<>();
-        // put the class name if map
         keyValueMap.put(CLASS_KEY, (T) clazz.getName());
         
         Field[] fields = clazz.getDeclaredFields();
@@ -249,6 +254,22 @@ public class Json {
         
         return keyValueMap;
     }
+    
+    /**
+     * Get the class name of an object with the key "class_".
+     * @param <T>
+     * @param object is the map from a json object.
+     * @return the class.
+     */
+    private static <T> Class<?> getObjectClass(Map<String, T> object) {
+        try {
+            String className = (String) object.get(CLASS_KEY);
+            Class<?> classDefinition = Class.forName(className);
+            return classDefinition;
+        } catch (ClassNotFoundException e) {
+            throw new JsonException("Class not found in object: " + e.getMessage(), e.getCause());
+        }
+    }
 
     /**
      * Remove double quote to get only the value string
@@ -258,7 +279,7 @@ public class Json {
     private static String cleanValue(String value) {
         return removeDoubleDot(removeDoubleQuote(value)).trim();
     }
-
+    
     /**
      * Get the class name of this array passed in param
      * @param array
@@ -270,7 +291,7 @@ public class Json {
         classNameOfThisArray = classNameOfThisArray.split("\"")[1];
         return removeDoubleQuote(classNameOfThisArray).trim();
     }
-
+    
     
     private static String removeDoubleDot(String string) {
         return string.replace(":", "");
@@ -279,7 +300,7 @@ public class Json {
     private static String addDoubleQuote(String string) {
         return "\"" + string + "\"";
     }
-
+    
     /**
      * Remove double quote if the string start with a double quote 
      * @param string

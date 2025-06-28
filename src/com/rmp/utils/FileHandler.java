@@ -6,31 +6,38 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
 import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.bukkit.Bukkit;
 
 public class FileHandler {
-    private Logger logger = null;
     private final String FILENAME;
 
     public FileHandler(String fileName) {
-        this.logger = Bukkit.getLogger();
         this.FILENAME = fileName;
     }
 
-    public void writeFile(String stringToWrite) {
+    /**
+     * Write in a file the string passed in param.
+     * @param stringToWrite
+     * @return true if is successfully write in file, otherwise return false.
+     */
+    public boolean writeFile(String stringToWrite) {
         try {
             FileWriter fileWriter = new FileWriter(FILENAME);
 
             fileWriter.write(stringToWrite);
             
             fileWriter.close();
+            return true;
         } catch (IOException exception) {
-            logger.log(Level.WARNING, "Failed to write in file: " + FILENAME);
+            Bukkit.getLogger().log(Level.WARNING, "Failed to write in file: " + FILENAME);
+            return false;
         }
     }
 
+    /**
+     * Get the data written in the file.
+     * @return the data from the file in string.
+     */
     public String getFileData() {
         try {
             File file = new File(FILENAME);
