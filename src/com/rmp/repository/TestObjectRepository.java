@@ -11,6 +11,7 @@ import com.rmp.utils.FileHandler;
 import com.rmp.utils.Json;
 
 public class TestObjectRepository implements Repository<TestObject> {
+    private static final String FILENAME = "test.json";
     
     @Override
     public boolean saveAll() {
@@ -23,16 +24,16 @@ public class TestObjectRepository implements Repository<TestObject> {
         testObjects.add(new TestObject("tom", "Hoekstra", "23", gameList));
         testObjects.add(new TestObject("Arthur", "Jacquemin", "25", gameList));
 
-        new FileHandler("waypoint.json").writeFile(Json.createJsonFromList(testObjects));
+        new FileHandler(FILENAME).writeFile(Json.createJsonFromList(testObjects));
 
         return true;
     }
 
     @Override
     public List<TestObject> findAll() {
-        String fileData = new FileHandler("waypoint.json").getFileData();
+        String fileData = new FileHandler(FILENAME).getFileData();
 
-        List<TestObject> list = Json.readJsonToList(TestObject.class.getName(), fileData);
+        List<TestObject> list = Json.readJsonToList(fileData);
 
         Bukkit.getLogger().info(list.toString());
 

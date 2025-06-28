@@ -9,15 +9,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.bukkit.Bukkit;
-
 import com.rmp.exception.InvalidFormatException;
 import com.rmp.exception.JsonException;
-import com.rmp.model.ConstructorParams;
 
-// TODO implement the possibility to read an array of object as a value
-// TODO store the class in the json to have a dynamic access
+// TODO handle different type of value, actually only String and List type as been tested
+// TODO need some refactoring and comment
 public class Json {
+    private static final String CLASS_KEY = "class_";
 
     //////////// method to create a json from a java object ////////////
 
@@ -70,7 +68,7 @@ public class Json {
             } 
         }
 
-        fieldListString.add(classNameInKeyValue(className));
+        fieldListString.add(getClassNameInKeyValue(className));
         
         return joinListToJsonObject(fieldListString);
     }
@@ -84,59 +82,99 @@ public class Json {
      * @param jsonString
      * @return a list of object corresponding to the class passed in param
      */
-    public static <T> List<T> readJsonToList(String className, String jsonString) {
+    public static <T, O> List<O> readJsonToList(String jsonString) {
         try {
             if (!jsonString.startsWith("[")) {
                 throw new InvalidFormatException("Data is not a json");
             }
             
-            Class<?> classDefinition = Class.forName(className);
-            List<T> instanceList = new ArrayList<>();
-            List<Map<String, String>> objectListInMap = getListMapFromArrayOfObject(jsonString);
-            Bukkit.getLogger().info(objectListInMap.toString());
+            List<Map<String, T>> objectListMap = getListMapFromArrayOfObject(jsonString);
             
-            // TODO must handle if a value is an array
-            // check if the value is a string or a list
-            for (Map<String, String> map : objectListInMap) {
-                
-                ConstructorParams constructorParams = createParam(map, classDefinition);
-                
-                T newInstance = createInstance(constructorParams, classDefinition);
-                
-                instanceList.add(newInstance);
-            }
+            List<O> instanceList = createListObject(objectListMap);
             
             return instanceList;
-        } catch (ClassNotFoundException e) {
+        } catch (Exception e) {
             throw new JsonException("Error during the reading of the json: " + e.getMessage(), e.getCause());
         }
     }
-    
-    private static ConstructorParams createParam(Map<String,String> map, Class<?> classDefinition) {
-        Field[] fields = classDefinition.getDeclaredFields();
-        
-        List<String> paramList = new ArrayList<>();
+
+    private static <O extends Object, T> List<O> createListObject(List<Map<String, T>> objectListMap) {
+        List<O> instanceList = new ArrayList<O>();
+
+        for (Map<String, T> map : objectListMap) {
+            // create an instance of the object
+            O newInstance = createObject(map);
+            
+            instanceList.add(newInstance);
+        }
+
+        return instanceList;
+    }
+
+    /**
+     * 
+     * @param <O> is an instance of a java object
+     * @param <T> is the value from the key / value map
+     * @param <L> is the value for the param
+     * @param object
+     * @param objectClass
+     * @return
+     */
+    private static <O extends Object, T, L> O createObject(Map<String, T> object) {
+        List<L> paramList = new ArrayList<L>();
         List<Class<?>> paramTypeList = new ArrayList<Class<?>>();
+        Class<?> classDefinition = getObjectClass(object);
         
+        Field[] fields = classDefinition.getDeclaredFields();
         for (Field field : fields) {
             field.setAccessible(true);
-            String fieldName = field.getName();
-            String value = map.get(fieldName);
+            String keyFieldName = field.getName();
+            T valueField = object.get(keyFieldName);
             
-            paramList.add(value);
+            // if an object is a list of object
+            if (valueField instanceof List) {
+                valueField.getClass();
+                List<Map<String, T>> objectList = (List<Map<String, T>>) valueField;
+
+                List<O> instanceList = createListObject(objectList);
+                paramList.add((L) instanceList);
+            }
+
+            else {
+                paramList.add((L) valueField);
+            }
+
             paramTypeList.add(field.getType());
         }
-        
-        return new ConstructorParams(paramList, paramTypeList);
+
+        O newInstance = createInstance(paramList, paramTypeList, classDefinition);
+
+        return newInstance;
+    }
+
+    /**
+     * Get the class name of the object stored in the object with the key "class_"
+     * @param <T>
+     * @param object is the map from a json object
+     * @return the class
+     */
+    private static <T> Class<?> getObjectClass(Map<String, T> object) {
+        try {
+            String className = (String) object.get(CLASS_KEY);
+            Class<?> classDefinition = Class.forName(className);
+            return classDefinition;
+        } catch (ClassNotFoundException e) {
+            throw new JsonException("Class not found in object: " + e.getMessage(), e.getCause());
+        }
     }
     
-    private static <T> T createInstance(ConstructorParams constructorParams, Class<?> classDefinition) {
+    private static <L, O> O createInstance(List<L> paramList, List<Class<?>> paramTypeList, Class<?> classDefinition) {
         try {
-            Class<?>[] paramTypes = constructorParams.ParamTypeList().toArray(new Class<?>[0]);
-            Object[] params = constructorParams.ParamList().toArray();
+            Class<?>[] paramTypes = paramTypeList.toArray(new Class<?>[0]);
+            Object[] params = paramList.toArray();
             
             Constructor<?> constructor = classDefinition.getDeclaredConstructor(paramTypes);
-            return (T) constructor.newInstance(params);
+            return (O) constructor.newInstance(params);
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
         | InvocationTargetException | NoSuchMethodException | SecurityException e) 
         {
@@ -184,11 +222,13 @@ public class Json {
      * @param clazz
      * @return
      */
-    private static <T> HashMap<String, T> getKeyValueFromJson(String jsonObject, Class<?> clazz) {
+    private static <T> Map<String, T> getKeyValueFromJson(String jsonObject, Class<?> clazz) {
         // TODO verification of jsonObject
-        HashMap<String, T> keyValueMap = new HashMap<>();
-        Field[] fields = clazz.getDeclaredFields();
+        Map<String, T> keyValueMap = new HashMap<>();
+        // put the class name if map
+        keyValueMap.put(CLASS_KEY, (T) clazz.getName());
         
+        Field[] fields = clazz.getDeclaredFields();
         for (Field field : fields) {
             String fieldName = field.getName();
             String stringAfterSelectedKey = jsonObject.split(addDoubleQuote(fieldName))[1];
@@ -225,7 +265,7 @@ public class Json {
      * @return
      */
     private static String getClassNameInArray(String array) {
-        String[] arrayOfClass = array.split("\"class_\":");
+        String[] arrayOfClass = array.split("\"" + CLASS_KEY + "\":");
         String classNameOfThisArray = arrayOfClass[arrayOfClass.length - 1];
         classNameOfThisArray = classNameOfThisArray.split("\"")[1];
         return removeDoubleQuote(classNameOfThisArray).trim();
@@ -254,8 +294,8 @@ public class Json {
      * @param className in string
      * @return ""class_": "exemple.class.name""
      */
-    private static String classNameInKeyValue(String className) {
-        return "\"class_\": " + "\"" + className + "\""; 
+    private static String getClassNameInKeyValue(String className) {
+        return "\"" + CLASS_KEY + "\": " + "\"" + className + "\""; 
     }
 
     /**
